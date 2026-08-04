@@ -1,258 +1,87 @@
-# ANA Chain Protocol — 综合性能基准测试报告
+# ANA Chain Protocol — Performance Benchmark Report
 
-**日期**: 2026-08-03  
-**平台**: Darwin (macOS), Apple Silicon, Python 3.13  
-**测试规模**: 每项 10,000–100,000 迭代，预热 1,000 迭代  
-
----
-
-## 执行摘要
-
-> **端到端加速比: 6.6x | Token 减少: 76% | 带宽减少: 77% | LLM 生成加速: 4.1x**
-
-ANA 链协议相比传统 JSON/HTTP 方案，**整体通信延迟下降一个数量级**。
-最大节省来自 LLM 推理阶段 — 密码子输出比 JSON 文本少 4.1x 的 token，直接减少 GPU 计算时间。
+**Date**: 2026-08-04
+**Platform**: Darwin (macOS), Apple Silicon, Python 3.13, Rust 1.84
+**Status**: v0.2.1 — all numbers independently measurable
 
 ---
 
-## 1. 编码速度
+## Measured Results
 
-*10,000 次操作，200 次迭代取均值*
+All numbers below come from running the benchmark suite (`benchmarks/`). No LLM inferences were used; token counts use a cl100k_base estimator calibrated within 5% of the GPT-4 tokenizer.
 
-| 指标 | ANA | JSON | 加速比 |
-|------|-----|------|--------|
-| 批量编码 10K | **6.31 ms** | 16.08 ms | **2.55x** |
-| 单次编码 | **0.63 µs** | 1.61 µs | **2.55x** |
-| 吞吐量 (batch=1000) | **1,653,267 ops/s** | 637,884 ops/s | **2.6x** |
-| P50 延迟 | 6.30 ms | 16.08 ms | — |
+### 1. Encoding Throughput
 
-**分析**: ANA 编码更快的原因有二：(1) 二进制直接拼接 vs JSON 字符串构建+转义；
-(2) 固定 3 字节头 + varint 比 JSON 的 `{"function": "..."` 结构更紧凑。
+| Implementation | Operations/sec | vs Python JSON |
+|---------------|---------------|----------------|
+| Python JSON | 638,000 | 1.0x (baseline) |
+| Python ANA | 1,653,000 | 2.6x |
+| Rust ANA | 9,200,000 | 14.4x |
 
----
+### 2. Wire Bytes (per call, including all protocol overhead)
 
-## 2. 解码速度
+| Protocol | Bytes | Ratio |
+|----------|-------|-------|
+| JSON over HTTP/TLS | ~535 B | baseline |
+| ANA (plaintext) | ~146 B | 3.7x smaller |
+| ANA (with HMAC) | same (absorbed by padding) | — |
 
-*1,000 条消息，500 次迭代取均值 (每消息耗时)*
+### 3. Token Consumption (measured with cl100k_base estimator)
 
-| 指标 | ANA | JSON | 比率 |
-|------|-----|------|------|
-| 单消息解码 | **1.48 µs** | 0.89 µs | 1.66x (ANA 更慢) |
+| Format | Avg tokens/call | Reduction |
+|--------|----------------|-----------|
+| OpenAI tool_call format | ~62 | baseline |
+| JSON (compact) | ~35 | 1.8x vs OpenAI |
+| ANA codon (text format) | ~12 | 3x vs compact JSON |
 
-**分析**: ANA 解码略慢于 JSON `loads()`。原因：ANA 需要 3 级码本查表 (service→operation→template)
-+ 类型化参数解码，而 JSON 是 C 实现的一次 `json.loads()`。**但绝对值差异仅 0.6 µs，
-在实际系统中完全可忽略**（一次 LLM token 生成 ~12ms，差了 4 个数量级）。
+> The 20x claim in earlier versions assumed LLMs could output raw binary codons as special tokens. This requires model integration (custom token or constrained decoding), which is not yet implemented. The 3x reduction with text-based codon format is real and independently measurable. Run `python3 benchmarks/token_real.py` to reproduce.
 
-**结论**: 解码微秒级差异不影响整体性能。编码端和传输端的节省远超此开销。
+### 4. Software Encode/Decode Latency (per call)
 
----
+| Operation | Python JSON | Python ANA | Rust ANA |
+|-----------|------------|------------|----------|
+| Encode | 1.6 us | 1.5 us | 0.18 us |
+| Decode | 0.9 us | 1.5 us | 0.49 us |
+| Full roundtrip | 1.6 us | 32.8 us | 0.94 us |
 
-## 3. 完整往返延迟分解
+Python ANA roundtrip is slower because it does more steps (codon encode → packetize → CRC → serialize → deserialize → parse payload → anticodon lookup → param decode). Rust overtakes JSON by a factor of 1.7x. In real LLM Agent scenarios, software encoding time (~us) is dwarfed by LLM generation time (~100-250ms).
 
-*单次 `get_forecast(city="Beijing", days=7)` 调用，各阶段分解*
+### 5. Sub-chain Rotation
 
-| 阶段 | ANA (µs) | JSON (µs) | 节省 (µs) | 说明 |
-|------|----------|-----------|------------|------|
-| **LLM 生成** | 37,500 | 250,000 | **212,500** | 3 tokens vs 62 tokens @ 80 tok/s |
-| 编码 | 0.7 | 1.6 | 0.9 | 二进制 vs JSON 序列化 |
-| 封包 | 3.3 | — | -3.3 | ANA 需要 packetize，JSON 直接发 |
-| TLS 加密 | — | 41.0 | 41.0 | ANA 载荷已不透明，可省略 TLS |
-| 网络 (LAN) | 500 | 500 | — | 相同条件 |
-| TLS 解密 | — | 41.0 | 41.0 | ANA 已省略 |
-| 解包 | 2.5 | — | -2.5 | CRC 校验 + 解包 |
-| 解码 | 1.5 | 0.9 | -0.6 | 查表 vs JSON.parse |
-| **总计** | **38,008** | **250,585** | **212,577** | |
-| **端到端加速比** | | | **6.6x** | |
+| Metric | Value |
+|--------|-------|
+| Rotation cost | 2.3 us |
+| Amortized per packet | 0.002 us (every 1000 packets) |
 
-### 延迟构成饼图（文字描述）
+### 6. Noise Injection
 
-```
-ANA (38ms total):                  JSON (251ms total):
-  ████████████████████ LLM 98.7%     ████████████████████ LLM 99.8%
-  █ 网络 1.3%                        █ TLS 0.03%
-  ▓ 封包/解包 0.02%                   █ 网络 0.2%
-  ▓ 编解码 <0.01%                     ▓ 编解码 <0.001%
-```
-
-**核心结论**: LLM 生成时间是绝对瓶颈，占 98-99%。ANA 通过减少输出 token 数量 4-5x，
-直接砍掉最大的延迟来源。其他所有优化（TLS、网络、序列化）加起来也不到 LLM 节省的 1%。
+| Noise ratio | Byte overhead | Decode overhead |
+|------------|--------------|-----------------|
+| 10% | +21% | +0.3 us/call |
 
 ---
 
-## 4. Token 消耗
+## What These Numbers Mean
 
-*1,000 次不同操作调用的 Token 对比*
+1. **Wire savings are real and unconditional**: ANA packets are 3.7x smaller than JSON+HTTP+TLS equivalents. This saves bandwidth regardless of the LLM used.
 
-| 指标 | ANA | JSON | 减少 |
-|------|-----|------|------|
-| 总 Token | 4,717 | 19,508 | **76%** |
-| 总字节 | 11,516 | 79,304 | **85%** |
-| 每调用平均 Token | 4.7 | 19.5 | **76%** |
-| 每调用平均字节 | 11.5 | 79.3 | **85%** |
+2. **Token savings depend on format**: With text-based codon syntax, you get ~3x fewer tokens. Larger savings (10-20x) require native binary token output, which is not yet built.
 
-### 单次调用的典型 Token 分解
+3. **Encoding throughput is 2.6x (Python) to 14.4x (Rust) faster**: ANA avoids JSON's field-name repetition and string escaping overhead.
 
-```
-JSON function call (get_forecast):
-  {"function": "weather.get_forecast", "parameters": {"city": "Beijing", "days": 7}}
-  → ~62 tokens (输出) + ~80 tokens (上下文窗口) = ~142 tokens
-
-ANA codon:
-  [0x01][0x01][0x00] + "Beijing" + 7
-  → ~3 special tokens (输出) + ~5 tokens (上下文) = ~8 tokens
-  → 节省: 134 tokens (94%)
-```
-
-### 成本估算 (假设 1,000 调用/天，30 天)
-
-| 模式 | 月 Token 消耗 | USD/月 | USD/年 |
-|------|-------------|--------|--------|
-| JSON | 585,240 输出 token | $8.78 | $105.36 |
-| ANA | 141,510 输出 token | $2.12 | $25.44 |
-| **年节省** | | | **$79.92** |
-
-*定价基于 $15/M 输出 token (GPT-4o 级别)；对于使用量大的 Agent 系统 (10K+ 调用/天)，年节省可达 $800+。*
+4. **Python ANA roundtrip is slower**: The extra steps (packetize, CRC, parse payload, anticodon lookup) add overhead. Rust eliminates this gap entirely and overtakes JSON.
 
 ---
 
-## 5. 带宽
+## Methodology
 
-*500 次调用的实际链路字节 (含所有协议开销)*
-
-| 指标 | ANA | JSON | 减少 |
-|------|-----|------|------|
-| 总链路字节 | 32,000 | 137,142 | **77%** |
-| 每调用字节 | **64** | 274 | **4.3x** |
-| 链路开销字节 | 14 (固定头+CRC) | ~195 (HTTP+TLS+TCP+IP) | **14x** |
-
-### 协议开销对比
-
-```
-ANA packet (64 bytes, 固定大小填充):
-  ┌──────┬───────┬─────────┬───────┬──────────┐
-  │ 12B  │  6B   │ 44B     │  2B   │
-  │ 头部 │ codon │ 填充    │ CRC   │
-  └──────┴───────┴─────────┴───────┘
-
-JSON over HTTP (274 bytes):
-  ┌──────┬──────┬──────┬─────────┬──────────┬──────────┐
-  │ 20B  │ 20B  │ 5B   │ ~150B   │ ~79B     │
-  │ IP   │ TCP  │ TLS  │ HTTP头  │ JSON正文 │
-  └──────┴──────┴──────┴─────────┴──────────┘
-```
+- All benchmarks run locally on Apple Silicon (M-series)
+- Python: CPython 3.13, Rust: 1.84 with `--release`
+- Iterations: 10,000-100,000 per measurement, 1,000 warmup
+- Token counts: cl100k_base estimator (GPT-4 tokenizer), calibrated within 5%
+- Wire bytes: measured from actual serialized packets (not estimated)
+- LLM generation time: *not measured* — requires real model integration
 
 ---
 
-## 6. 并发吞吐量
-
-*不同批次大小的操作吞吐量 (ops/sec)*
-
-| 批次大小 | ANA (ops/s) | JSON (ops/s) | 加速比 |
-|----------|-------------|-------------|--------|
-| 1 | 1,448,050 | 611,496 | 2.4x |
-| 10 | 1,576,293 | 625,485 | 2.5x |
-| 50 | 1,561,870 | 633,105 | 2.5x |
-| 100 | 1,643,980 | 634,968 | 2.6x |
-| 500 | 1,417,097 | 625,265 | 2.3x |
-| 1,000 | 1,653,267 | 637,884 | 2.6x |
-
-**分析**: ANA 在所有批次大小下保持 **2.3-2.6x** 的吞吐优势。
-JSON 吞吐量在批次增大后趋于平缓 (~630K ops/s)，受到 Python JSON 编码器瓶颈限制；
-ANA 继续随批次增长 (~1.6M ops/s)，瓶颈在于内存带宽而非序列化开销。
-
----
-
-## 7. LLM 生成时间模拟
-
-*基于 80 tokens/sec 的典型 LLM 输出速度*
-
-| 指标 | ANA | JSON | 加速比 |
-|------|-----|------|--------|
-| 每调用平均 Token | **4.7** | 19.5 | **4.1x** |
-| LLM 生成时间 | **59.0 ms** | 243.9 ms | **4.1x** |
-| 每调用节省 | | | **184.9 ms** |
-| 每 1,000 调用节省 | | | **185 秒** (~3 分钟) |
-
-**关键洞察**: 这是 ANA 最大的价值所在。序列化/反序列化的微秒级节省只是边角料；
-**减少 LLM 输出 token 数量 4x 才是真正的性能突破**。
-Agent 高频场景 (10K+ tool calls/day) 下，每天可节省 GPU 推理时间 **30+ 分钟**。
-
----
-
-## 8. 子链轮换开销
-
-*1,000 次轮换操作*
-
-| 指标 | 数值 |
-|------|------|
-| 平均轮换耗时 | **2.28 µs** |
-| P99 轮换耗时 | **2.96 µs** |
-| 每次轮换的密钥派生 | HKDF(salt=master_seed, ikm=chain_index, info="ANA-v1-subchain") |
-| 摊销到每数据包 | **0.0023 µs** (每 1000 包执行一次) |
-
-**分析**: 子链轮换的开销微不足道 (2.3 µs，每 1000 包一次)。
-轮换不涉及码本重载 — 仅派生出新的子链种子，新密码子映射由 PRNG 按需生成。
-
----
-
-## 9. 噪声注入开销
-
-*500 次调用，不同噪声比例*
-
-| 噪声比例 | 字节开销 | 编码耗时 | 解码耗时 |
-|----------|---------|---------|---------|
-| 0% | 0% | 0.43 ms | 1.56 µs/次 |
-| 5% | +21% | 0.45 ms | 1.86 µs/次 |
-| 10% | +21% | 0.43 ms | 1.86 µs/次 |
-| 20% | +21% | 0.44 ms | 1.84 µs/次 |
-| 30% | +21% | 0.44 ms | 1.84 µs/次 |
-
-**分析**: 噪声密码子是 3 字节的 `[0x00, 0x00, 0x00]`，接收方 O(1) 判断并丢弃。
-5% 噪声比增加 21% 字节开销（因为固定大小填充的截断效应），
-解码额外开销 0.3 µs — 基本可忽略。**推荐默认噪声比: 10%。**
-
----
-
-## 10. 汇总对比表
-
-| 维度 | JSON/HTTP | ANA Chain | 提升 |
-|------|-----------|-----------|------|
-| **端到端延迟** | 250.6 ms | 38.0 ms | **6.6x** 更快 |
-| **LLM 生成时间** | 243.9 ms | 59.0 ms | **4.1x** 更快 |
-| **编码吞吐量** | 638 K ops/s | 1,653 K ops/s | **2.6x** 更高 |
-| **Token 消耗** | 19.5/调用 | 4.7/调用 | **76%** 减少 |
-| **链路带宽** | 274 B/调用 | 64 B/调用 | **77%** 减少 |
-| **协议开销** | ~195 B (HTTP+TLS) | 14 B (固定头) | **14x** 更小 |
-| **子链轮换** | N/A | 2.3 µs/1000包 | 可忽略 |
-| **噪声注入** | N/A | 1.8 µs/调用 | 可忽略 |
-| **降级支持** | — | JSON-RPC 2.0 回退 | 兼容现有生态 |
-
----
-
-## 11. 结论与建议
-
-### ANA 链协议适合的场景
-
-1. **高频率 Agent 工具调用** (>1000 calls/day): Token 节省和 LLM 生成加速带来显著效益
-2. **低延迟要求的实时 Agent**: 从 251ms 降到 38ms 的总延迟使得 Agent 交互更流畅
-3. **带宽受限环境** (IoT, 移动网络): 77% 的带宽节省直接降低传输成本和延迟
-4. **Agent-to-Agent 通信**: 密码子作为语义指针，避免 Agent A → 自然语言 → Agent B 的双重翻译
-
-### 当前限制
-
-1. **码本同步**: 需要事先约定 codebook 版本。可通过 registry 服务或编译时嵌入解决
-2. **解码微秒级劣势**: 1.7x 慢于 JSON.parse，但绝对值仅 0.6 µs，在实际系统中不构成瓶颈
-3. **人类可读性**: 密码子对调试不友好。需要旁路日志通道记录明文映射
-4. **生态集成**: 需要各 Agent 框架 (LangChain, MCP, A2A) 支持 ANA 编码层
-
-### 下一步
-
-1. **MCP 集成**: 实现 ANA 作为 MCP Transport，在真实 Agent 框架中验证效果
-2. **多语言 SDK**: Rust/Go 实现（预计编码 5x 更快，解码 3x 更快）
-3. **码本注册中心**: 分布式的 codebook 版本发现服务
-4. **实际 Agent 测试**: 在 Claude/GPT function calling 中测量实际 token 节省
-
----
-
-*报告由 ANA Chain Protocol Benchmark Suite v0.1.0 生成*  
-*原始数据: `benchmarks/results.json`*
+*Generated by `benchmarks/full_benchmark.py`, `benchmarks/token_real.py`, and `benchmarks/reliability_bench.py`*

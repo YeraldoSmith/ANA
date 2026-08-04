@@ -1,7 +1,7 @@
 # ANA — AI-Native Communication Protocol
 
 [![Version](https://img.shields.io/badge/version-0.2.0-blue)](https://github.com/YeraldoSmith/ANA)
-[![Tests](https://img.shields.io/badge/tests-91%20%2B%2013%20(Rust)-green)](https://github.com/YeraldoSmith/ANA)
+[![Tests](https://img.shields.io/badge/tests-79%20%2B%2013%20(Rust)-green)](https://github.com/YeraldoSmith/ANA)
 [![License](https://img.shields.io/badge/license-AGPLv3-blue)](LICENSE)
 [![Status](https://img.shields.io/badge/status-prototype-orange)](https://github.com/YeraldoSmith/ANA)
 

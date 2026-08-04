@@ -339,7 +339,7 @@ class ReliableSession:
             seq=self._send_seq,
         )
         self._send_seq += 1
-        wire = serialize_packet(packet, pad=True)
+        wire = serialize_packet(packet, pad=True, hmac_key=self.session.hmac_key)
         self.sock.sendto(wire, self.address)
 
     def send_ping(self):
@@ -357,7 +357,7 @@ class ReliableSession:
         """Send a ROTATE packet."""
         packet = make_rotate(new_chain_index, stream_id=0, seq=self._send_seq)
         self._send_seq += 1
-        wire = serialize_packet(packet, pad=True)
+        wire = serialize_packet(packet, pad=True, hmac_key=self.session.hmac_key)
         self._ack_tracker.track(self._send_seq - 1, wire)
         self.sock.sendto(wire, self.address)
         self.session.record_send()
@@ -366,7 +366,7 @@ class ReliableSession:
         """Send an ERROR packet."""
         packet = make_error(error_code, detail, stream_id=0, seq=self._send_seq)
         self._send_seq += 1
-        wire = serialize_packet(packet, pad=True)
+        wire = serialize_packet(packet, pad=True, hmac_key=self.session.hmac_key)
         self.sock.sendto(wire, self.address)
 
     # ------------------------------------------------------------------
@@ -480,7 +480,7 @@ class ReliableSession:
             from ana.packet import make_rotate_ack
             ack_pkt = make_rotate_ack(new_chain, stream_id=0, seq=self._send_seq)
             self._send_seq += 1
-            self.sock.sendto(serialize_packet(ack_pkt, pad=True), self.address)
+            self.sock.sendto(serialize_packet(ack_pkt, pad=True, hmac_key=self.session.hmac_key), self.address)
 
         elif packet.packet_type == PacketType.ROTATE_ACK:
             chain = struct.unpack('>I', packet.payload[:4])[0]
