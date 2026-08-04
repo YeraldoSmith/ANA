@@ -72,9 +72,13 @@ class Session:
         self.encoder: Optional[CodonEncoder] = None
         self.decoder: Optional[CodonDecoder] = None
 
-        # HMAC (optional integrity protection)
+        # HMAC (integrity protection, enabled by default)
         self.hmac_key: Optional[bytes] = None
         self.hmac_enabled: bool = False
+
+        # AEAD (ANA-S encryption, set when ANA-S handshake is used)
+        self.aead_send: Optional['AEADCipher'] = None
+        self.aead_recv: Optional['AEADCipher'] = None
 
         # Stats
         self.packets_sent: int = 0

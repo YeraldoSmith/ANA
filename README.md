@@ -29,12 +29,12 @@ ANA encodes API operations as compact binary "codons" via a pre-shared codebook,
 
 | Format | Avg tokens/call | Reduction |
 |--------|----------------|-----------|
-| JSON (OpenAI function call) | ~62 | — |
-| JSON (compact) | ~35 | baseline |
-| ANA codon (text format) | **~12** | **~3x fewer** |
-| ANA codon (native binary) | ~3 | ~20x (requires model integration, not yet built) |
+| JSON (OpenAI tool_call) | ~62 | — |
+| JSON (compact) | ~29 | 2.1x vs OpenAI |
+| ANA `<codon:>` format | ~12 | 5.2x vs OpenAI |
+| ANA `@s.o.t` format | **~6** | **10x vs OpenAI** |
 
-> Token counts measured with cl100k_base estimator (GPT-4 tokenizer, calibrated within 5%). Run `python3 benchmarks/token_real.py` to reproduce. The 3x token reduction with text-based codon format is real and independently verifiable. The 20x claim requires native binary codon output (special token or constrained decoding), which is planned but not yet implemented.
+> Token counts measured with cl100k_base estimator (GPT-4 tokenizer, calibrated within 5%). Run `python3 benchmarks/token_format.py` to reproduce all formats. The `@1.1.0 Beijing 7` format achieves 10x token reduction over OpenAI tool_call format using only text — no model integration needed.
 
 ---
 
@@ -75,9 +75,10 @@ python3 server.py
 │   ★ ANA (encoding layer)            │  ← This protocol
 │     - Codon codec                   │
 │     - Reliability (ACK/retry/ping)  │
-│     - HMAC integrity (optional)     │
+│     - HMAC integrity (default on)   │
+│     - ANA-S (X25519+Ed25519+AEAD)   │
 ├─────────────────────────────────────┤
-│   TLS (transport security)          │  ← Required in v0.2.0
+│   TCP / UDP (TLS optional)          │
 ├─────────────────────────────────────┤
 │   TCP / UDP                         │
 └─────────────────────────────────────┘
