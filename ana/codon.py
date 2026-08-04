@@ -78,7 +78,7 @@ _PARAM_ENCODERS = {
     'int32': lambda v: struct.pack('>i', v),
     'float32': lambda v: struct.pack('>f', v),
     'bool': lambda v: b'\x01' if v else b'\x00',
-    'bytes': lambda v: v if isinstance(v, bytes) else bytes(v),
+    'bytes': lambda v: struct.pack('>H', len(v)) + (v if isinstance(v, bytes) else bytes(v)),
 }
 
 _PARAM_DECODERS = {
@@ -89,7 +89,9 @@ _PARAM_DECODERS = {
     'int32': lambda b, off: (struct.unpack('>i', b[off:off+4])[0], off + 4),
     'float32': lambda b, off: (struct.unpack('>f', b[off:off+4])[0], off + 4),
     'bool': lambda b, off: (b[off] != 0, off + 1),
-    'bytes': lambda b, off: (b[off:], off + len(b)),
+    # bytes is length-prefixed: [len: uint16][data]
+    'bytes': lambda b, off: (b[off+2:off+2+struct.unpack('>H', b[off:off+2])[0]],
+                              off + 2 + struct.unpack('>H', b[off:off+2])[0]),
 }
 
 

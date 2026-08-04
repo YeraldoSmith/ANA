@@ -314,9 +314,13 @@ def make_codon(codon_bytes: bytes, stream_id: int = 0, seq: int = 0,
       [codons...][noise...]
 
     chain_index is embedded for sub-chain sync verification.
+
+    NOTE: codon_count is informational (len // 3). The actual codon
+    byte boundaries are determined at parse time by decoding parameters,
+    not by this count. See parse_codon_payload() for the real parser.
     """
     import struct
-    codon_count = len(codon_bytes) // 3  # rough count — may include param bytes
+    codon_count = len(codon_bytes) // 3  # informational; real parser ignores this
     noise_count = len(noise) // 3
     payload = (struct.pack('>H B B', chain_index & 0xFFFF, codon_count, noise_count)
                + codon_bytes + noise)

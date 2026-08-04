@@ -356,9 +356,15 @@ def derive_scramble(seed: bytes, service_id: int, op_id: int, template_id: int) 
     """
     Derive a scrambled (S,O,T) from a seed for a given sub-chain.
 
-    This is how sub-chain rotation changes the codon mapping:
-    the same logical operation maps to different byte values
-    under different sub-chain seeds.
+    When wired into the encode/decode path, this would make sub-chain
+    rotation change codon byte values — the same logical operation maps
+    to different raw bytes under different sub-chain seeds, providing
+    "mapping forward secrecy".
+
+    NOTE (v0.2.0): This function is defined but NOT yet wired into the
+    CodonEncoder/CodonDecoder pipeline. Currently, sub-chain rotation
+    only rotates HMAC keys, not codon mappings. Wiring this requires
+    the codebook to track the current sub-chain index per session.
     """
     rng = ChaCha20RNG(seed + bytes([service_id, op_id, template_id]))
     s = rng.randint(1, 254)
