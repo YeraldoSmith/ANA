@@ -2,14 +2,24 @@
 Session negotiation for ANA Chain protocol.
 
 Handles the TCP-based initial handshake: exchange codebook versions,
-agree on common codebook, derive session keys.
+agree on common codebook, perform X25519 ECDH key exchange,
+and derive per-session encryption/HMAC keys.
+
+v0.2.1: Added X25519 ECDH so each session gets unique keys.
+         Without ECDH, any codebook holder could derive other sessions'
+         keys from the plaintext session_nonce. Now each pair gets a
+         unique shared secret via ephemeral X25519 exchange.
 """
 
 import json
 import os
 import struct
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
+
+from cryptography.hazmat.primitives.asymmetric.x25519 import (
+    X25519PrivateKey, X25519PublicKey
+)
 
 from ana.packet import (
     Packet, PacketType,
@@ -18,7 +28,9 @@ from ana.packet import (
     serialize_packet, deserialize_packet,
 )
 from ana.session import Session, SessionConfig
-from ana.codebook import Codebook, CodebookVersion, derive_master_seed
+from ana.codebook import (
+    Codebook, CodebookVersion, derive_master_seed, derive_hmac_key, hkdf,
+)
 
 
 @dataclass
@@ -28,6 +40,7 @@ class NegotiationResult:
     codebook_version: CodebookVersion
     session_nonce: bytes
     config: SessionConfig
+    ecdh_shared_secret: bytes = field(default=b'')
 
 
 class Negotiator:
@@ -51,32 +64,31 @@ class Negotiator:
             available_codebooks: Map of codebook_id → Codebook that this side supports.
         """
         self.codebooks = available_codebooks
+        self._eph_sk: Optional[X25519PrivateKey] = None
+        self._eph_pk_bytes: bytes = b''
+
+    def _generate_ephemeral_key(self) -> bytes:
+        """Generate an ephemeral X25519 keypair for this negotiation."""
+        self._eph_sk = X25519PrivateKey.generate()
+        self._eph_pk_bytes = self._eph_sk.public_key().public_bytes_raw()
+        return self._eph_pk_bytes
 
     # ------------------------------------------------------------------
     # Agent side
     # ------------------------------------------------------------------
 
     def negotiate_as_agent(self, sock, timeout: float = 10.0) -> NegotiationResult:
-        """Execute the agent-side negotiation handshake.
-
-        Args:
-            sock: Connected TCP socket.
-            timeout: Socket timeout in seconds.
-
-        Returns:
-            NegotiationResult with agreed codebook and session parameters.
-
-        Raises:
-            RuntimeError: If negotiation fails.
-        """
+        """Execute the agent-side negotiation with X25519 ECDH key exchange."""
         sock.settimeout(timeout)
 
-        # Step 1: Send NEGOTIATE
+        # Step 1: Generate ephemeral key + Send NEGOTIATE
+        eph_pk = self._generate_ephemeral_key()
         supported = list(self.codebooks.keys())
-        packet = make_negotiate(supported, stream_id=0, seq=0)
+        packet = make_negotiate(supported, stream_id=0, seq=0,
+                                eph_pk=eph_pk)
         self._send(sock, packet)
 
-        # Step 2: Receive NEGOTIATE_ACK
+        # Step 2: Receive NEGOTIATE_ACK (with API's ephemeral key)
         response = self._recv(sock)
         if response.packet_type != PacketType.NEGOTIATE_ACK:
             raise RuntimeError(f"Expected NEGOTIATE_ACK, got {response.packet_type}")
@@ -85,6 +97,7 @@ class Negotiator:
         codebook_id = ack_data['codebook_id']
         version = ack_data['version']
         session_nonce = bytes.fromhex(ack_data['session_nonce'])
+        peer_eph_pk = bytes.fromhex(ack_data.get('eph_pk', ''))
 
         if codebook_id not in self.codebooks:
             raise RuntimeError(f"API selected unknown codebook: {codebook_id}")
@@ -97,6 +110,15 @@ class Negotiator:
             rotation_interval=ack_data.get('rotation_interval', 1000),
         )
 
+        # Compute ECDH shared secret
+        ecdh_secret = b''
+        if peer_eph_pk and self._eph_sk:
+            try:
+                their_eph = X25519PublicKey.from_public_bytes(peer_eph_pk)
+                ecdh_secret = self._eph_sk.exchange(their_eph)
+            except Exception:
+                pass  # fall back to no-ECDH mode
+
         # Step 3: Send NEGOTIATE_CONFIRM
         confirm = make_negotiate_confirm(stream_id=0, seq=1)
         self._send(sock, confirm)
@@ -106,6 +128,7 @@ class Negotiator:
             codebook_version=codebook.version,
             session_nonce=session_nonce,
             config=config,
+            ecdh_shared_secret=ecdh_secret,
         )
 
     # ------------------------------------------------------------------
@@ -113,16 +136,17 @@ class Negotiator:
     # ------------------------------------------------------------------
 
     def negotiate_as_api(self, sock, timeout: float = 10.0) -> NegotiationResult:
-        """Execute the API-side negotiation handshake."""
+        """Execute the API-side negotiation with X25519 ECDH key exchange."""
         sock.settimeout(timeout)
 
-        # Step 1: Receive NEGOTIATE
+        # Step 1: Receive NEGOTIATE (with Agent's ephemeral key)
         request = self._recv(sock)
         if request.packet_type != PacketType.NEGOTIATE:
             raise RuntimeError(f"Expected NEGOTIATE, got {request.packet_type}")
 
         req_data = json.loads(request.payload.decode('utf-8'))
         agent_codebooks = req_data.get('codebook_ids', [])
+        peer_eph_pk = bytes.fromhex(req_data.get('eph_pk', ''))
 
         # Step 2: Select best common codebook
         selected = self._select_codebook(agent_codebooks)
@@ -135,13 +159,26 @@ class Negotiator:
         codebook_id, codebook = selected
         session_nonce = os.urandom(32)
 
-        # Step 3: Send NEGOTIATE_ACK
+        # Generate our ephemeral key
+        eph_pk = self._generate_ephemeral_key()
+
+        # Compute ECDH shared secret
+        ecdh_secret = b''
+        if peer_eph_pk and self._eph_sk:
+            try:
+                their_eph = X25519PublicKey.from_public_bytes(peer_eph_pk)
+                ecdh_secret = self._eph_sk.exchange(their_eph)
+            except Exception:
+                pass
+
+        # Step 3: Send NEGOTIATE_ACK (with our ephemeral key)
         ack = make_negotiate_ack(
             codebook_id=codebook_id,
             version=codebook.version.version,
             session_nonce=session_nonce,
             stream_id=0,
             seq=0,
+            eph_pk=eph_pk,
         )
         self._send(sock, ack)
 
@@ -155,6 +192,7 @@ class Negotiator:
             codebook_version=codebook.version,
             session_nonce=session_nonce,
             config=SessionConfig(),
+            ecdh_shared_secret=ecdh_secret,
         )
 
     # ------------------------------------------------------------------

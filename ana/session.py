@@ -94,8 +94,14 @@ class Session:
         self.state = SessionState.NEGOTIATING
 
     def establish(self, codebook: Codebook, codebook_version: CodebookVersion,
-                  session_nonce: bytes, config: Optional[SessionConfig] = None):
-        """Establish the session with negotiated parameters."""
+                  session_nonce: bytes, config: Optional[SessionConfig] = None,
+                  ecdh_secret: bytes = b''):
+        """Establish the session with negotiated parameters.
+
+        If ecdh_secret is provided (from X25519 ECDH during negotiation),
+        it is mixed into the HMAC key derivation so each session gets a
+        unique key that other codebook holders cannot derive.
+        """
         self.codebook = codebook
         self.codebook_version = codebook_version
         self.session_nonce = session_nonce
@@ -103,9 +109,7 @@ class Session:
             self.config = config
 
         # Derive master seed
-        seed = bytes.fromhex(codebook_version.seed_hash.hex())  # copy
         self.master_seed = derive_master_seed(
-            # Use the actual codebook seed hash as salt
             codebook_version.seed_hash,
             session_nonce,
         )
@@ -119,10 +123,21 @@ class Session:
         self.encoder = CodonEncoder(codebook)
         self.decoder = CodonDecoder(codebook)
 
-        # Derive HMAC key if capability negotiated
-        if codebook_version.capabilities & 0x10:  # CAP_HMAC = 1 << 4
-            self.hmac_enabled = True
-            self.hmac_key = derive_hmac_key(self.master_seed, 0)
+        # HMAC is enabled by default (CAP_HMAC). Derive key with ECDH
+        # secret mixed in for per-session uniqueness.
+        self.hmac_enabled = True
+        hmac_base = self.master_seed
+        if ecdh_secret:
+            # Mix ECDH shared secret into HMAC key material.
+            # Even if another codebook holder sees the session_nonce,
+            # they cannot derive our HMAC key without the ECDH secret.
+            hmac_base = hkdf(
+                salt=ecdh_secret,
+                ikm=self.master_seed,
+                info=b"ANA-v1-hmac-ecdh",
+                length=64,
+            )
+        self.hmac_key = derive_hmac_key(hmac_base, 0)
 
         self.state = SessionState.ACTIVE
         self.last_active = time.time()

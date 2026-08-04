@@ -274,10 +274,14 @@ def deserialize_packet(data: bytes,
 # ---------------------------------------------------------------------------
 
 
-def make_negotiate(codebook_ids: list[str], stream_id: int = 0, seq: int = 0) -> Packet:
-    """Build a NEGOTIATE packet."""
+def make_negotiate(codebook_ids: list[str], stream_id: int = 0, seq: int = 0,
+                   eph_pk: bytes = b'') -> Packet:
+    """Build a NEGOTIATE packet with optional X25519 ephemeral public key."""
     import json
-    payload = json.dumps({'codebook_ids': codebook_ids}).encode('utf-8')
+    data = {'codebook_ids': codebook_ids}
+    if eph_pk:
+        data['eph_pk'] = eph_pk.hex()
+    payload = json.dumps(data).encode('utf-8')
     return Packet(PacketType.NEGOTIATE, stream_id, seq, payload)
 
 
@@ -285,17 +289,21 @@ def make_negotiate_ack(codebook_id: str, version: int, session_nonce: bytes,
                        stream_id: int = 0, seq: int = 0,
                        session_timeout: int = 3600,
                        max_packet_size: int = 1024,
-                       rotation_interval: int = 1000) -> Packet:
-    """Build a NEGOTIATE_ACK packet."""
+                       rotation_interval: int = 1000,
+                       eph_pk: bytes = b'') -> Packet:
+    """Build a NEGOTIATE_ACK packet with optional X25519 ephemeral public key."""
     import json
-    payload = json.dumps({
+    data = {
         'codebook_id': codebook_id,
         'version': version,
         'session_nonce': session_nonce.hex(),
         'session_timeout': session_timeout,
         'max_packet_size': max_packet_size,
         'rotation_interval': rotation_interval,
-    }).encode('utf-8')
+    }
+    if eph_pk:
+        data['eph_pk'] = eph_pk.hex()
+    payload = json.dumps(data).encode('utf-8')
     return Packet(PacketType.NEGOTIATE_ACK, stream_id, seq, payload)
 
 

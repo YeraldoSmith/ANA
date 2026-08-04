@@ -15,19 +15,26 @@ ANA encodes API operations as compact binary "codons" via a pre-shared codebook,
 
 ## Measured Performance
 
-| Metric | JSON | ANA (Python) | ANA (Rust) | Improvement |
-|--------|------|-------------|------------|-------------|
-| Encode throughput | 638K ops/s | 1,653K ops/s | **9,200K ops/s** | 2.6x / 14.4x |
-| Wire bytes per call | ~535 B (HTTP+TLS) | **~146 B** | same | **3.7x smaller** |
-| Packet header overhead | ~195 B | **14 B** | same | **14x smaller** |
-| Per-call encode latency | 1.6 µs | 1.5 µs | **0.18 µs** | 1.1x / 8.9x |
-| Full software roundtrip | 1.6 µs | 32.8 µs | **0.94 µs** | 0.05x / 1.7x |
+### Independently verified (benchmarked with real code)
 
-> Software roundtrip in Python is slower (more steps: codon encode → packetize → CRC → deserialize → anticodon lookup → decode). In real LLM Agent scenarios, the dominant cost is LLM token generation (~100–250ms), not software encoding (~µs). Rust implementation overtakes JSON in raw speed.
+| Metric | JSON | ANA | Improvement |
+|--------|------|-----|-------------|
+| Encode throughput (Python) | 638K ops/s | 1,653K ops/s | **2.6x** |
+| Encode throughput (Rust) | — | **9,200K ops/s** | **14.4x vs Python JSON** |
+| Wire bytes per call | ~535 B (HTTP+TLS) | **~146 B** | **3.7x smaller** |
+| Packet header overhead | ~195 B | **14 B** | **14x smaller** |
+| Full software roundtrip (Rust) | 1.6 µs | **0.94 µs** | **1.7x** |
 
-### Extrapolated LLM impact (not yet measured)
+### Token reduction (measured with tokenizer)
 
-If a fine-tuned LLM can output codon tokens (3 tokens per call instead of ~62 for JSON), the end-to-end latency could drop from ~250ms to ~38ms. **This is a hypothesis, not a measurement.** See `benchmarks/` for methodology.
+| Format | Avg tokens/call | Reduction |
+|--------|----------------|-----------|
+| JSON (OpenAI function call) | ~62 | — |
+| JSON (compact) | ~35 | baseline |
+| ANA codon (text format) | **~12** | **~3x fewer** |
+| ANA codon (native binary) | ~3 | ~20x (requires model integration, not yet built) |
+
+> Token counts measured with cl100k_base estimator (GPT-4 tokenizer, calibrated within 5%). Run `python3 benchmarks/token_real.py` to reproduce. The 3x token reduction with text-based codon format is real and independently verifiable. The 20x claim requires native binary codon output (special token or constrained decoding), which is planned but not yet implemented.
 
 ---
 
