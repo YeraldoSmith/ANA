@@ -5,7 +5,7 @@ A codon-based communication protocol for AI Agent <-> API communication
 that eliminates JSON serialization overhead through pre-shared codebooks.
 
 Author:  Yeraldo Smith (https://github.com/YeraldoSmith)
-License: MIT
+License: AGPL-3.0-or-later
 """
 
 __version__ = "0.3.0"

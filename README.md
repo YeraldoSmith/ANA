@@ -2,7 +2,7 @@
 
 [![Version](https://img.shields.io/badge/version-0.3.0-blue)](https://github.com/YeraldoSmith/ANA)
 [![Tests](https://img.shields.io/badge/tests-91%20%2B%2013%20(Rust)-green)](https://github.com/YeraldoSmith/ANA)
-[![License](https://img.shields.io/badge/license-MIT-brightgreen)](LICENSE)
+[![License](https://img.shields.io/badge/license-AGPLv3-blue)](LICENSE)
 
 **AI-Native Communication Protocol** — replacing JSON serialization with biological codon-based semantic addressing.
 
@@ -133,4 +133,6 @@ Key features:
 
 ## License
 
-MIT
+AGPL-3.0-or-later — see [LICENSE](LICENSE).
+
+This is a strong copyleft license. If you modify this software and run it as a network service, you must release your changes under the same license.

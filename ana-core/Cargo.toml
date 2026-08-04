@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 description = "ANA Chain Protocol - native Rust implementation"
 authors = ["Yeraldo Smith <https://github.com/YeraldoSmith>"]
-license = "MIT"
+license = "AGPL-3.0-or-later"
 repository = "https://github.com/YeraldoSmith/ana-chain"
 
 [lib]
