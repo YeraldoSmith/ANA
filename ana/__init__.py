@@ -35,6 +35,10 @@ from ana.session import Session, SessionState, SessionConfig
 from ana.transport import UDPSender, UDPReceiver, NoiseGenerator
 from ana.negotiator import Negotiator, NegotiationResult
 from ana.fallback import FallbackHandler, JSONFallbackCodec
+from ana.security import (
+    ANAIdentity, ANASecureSession, AEADCipher,
+    HelloPacket, HelloAckPacket,
+)
 from ana.reliability import (
     ReliableSession, ACKTracker, Heartbeat, BloomFilter,
     CodonEvent, AckEvent, PingEvent, PongEvent,
@@ -67,6 +71,9 @@ __all__ = [
     "Negotiator", "NegotiationResult",
     # Fallback
     "FallbackHandler", "JSONFallbackCodec",
+    # Security (ANA-S)
+    "ANAIdentity", "ANASecureSession", "AEADCipher",
+    "HelloPacket", "HelloAckPacket",
     # Reliability
     "ReliableSession", "ACKTracker", "Heartbeat", "BloomFilter",
     "CodonEvent", "AckEvent", "PingEvent", "PongEvent",
