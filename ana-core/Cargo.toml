@@ -1,0 +1,26 @@
+[package]
+name = "ana-core"
+version = "0.1.0"
+edition = "2021"
+description = "ANA Chain Protocol - native Rust implementation"
+authors = ["Yeraldo Smith <https://github.com/YeraldoSmith>"]
+license = "MIT"
+repository = "https://github.com/YeraldoSmith/ana-chain"
+
+[lib]
+name = "ana_core"
+path = "src/lib.rs"
+
+[dependencies]
+hmac = "0.12"
+sha2 = "0.10"
+rand = "0.8"
+serde = { version = "1", features = ["derive"] }
+serde_yaml = "0.9"
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "ana_bench"
+harness = false

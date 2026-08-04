@@ -1,0 +1,65 @@
+codebook_id: "weather-v1"
+version: 1
+codebook_seed: "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0"
+capabilities: 15  # CODON | NOISE | FRAGMENT | ROTATE
+
+services:
+  - id: 1
+    name: "weather"
+    operations:
+      - id: 1
+        name: "get_forecast"
+        templates:
+          - id: 0
+            description: "forecast by city, metric units"
+            params: [city, days]
+            types: [string, uint8]
+            defaults: {days: 7}
+
+          - id: 1
+            description: "forecast by coordinates, imperial units"
+            params: [lat, lon, days]
+            types: [float32, float32, uint8]
+            defaults: {days: 3}
+
+      - id: 2
+        name: "get_current"
+        templates:
+          - id: 0
+            description: "current conditions by city"
+            params: [city]
+            types: [string]
+            defaults: {}
+
+  - id: 2
+    name: "alerts"
+    operations:
+      - id: 1
+        name: "get_alerts"
+        templates:
+          - id: 0
+            description: "weather alerts by region"
+            params: [region, severity]
+            types: [string, string]
+            defaults: {severity: "all"}
+
+  - id: 128
+    name: "_system"
+    operations:
+      - id: 1
+        name: "response_success"
+        templates:
+          - id: 0
+            description: "generic success response"
+            params: [message]
+            types: [string]
+            defaults: {}
+
+      - id: 2
+        name: "response_error"
+        templates:
+          - id: 0
+            description: "generic error response"
+            params: [code, message]
+            types: [uint16, string]
+            defaults: {}
