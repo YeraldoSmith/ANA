@@ -1,7 +1,7 @@
-# ANA Chain Protocol
+# ANA — AI-Native Communication Protocol
 
-[![Version](https://img.shields.io/badge/version-0.3.0-blue)](https://github.com/YeraldoSmith/ana-chain)
-[![Tests](https://img.shields.io/badge/tests-91%20%2B%2013%20(Rust)-green)](https://github.com/YeraldoSmith/ana-chain)
+[![Version](https://img.shields.io/badge/version-0.3.0-blue)](https://github.com/YeraldoSmith/ANA)
+[![Tests](https://img.shields.io/badge/tests-91%20%2B%2013%20(Rust)-green)](https://github.com/YeraldoSmith/ANA)
 [![License](https://img.shields.io/badge/license-MIT-brightgreen)](LICENSE)
 
 **AI-Native Communication Protocol** — replacing JSON serialization with biological codon-based semantic addressing.

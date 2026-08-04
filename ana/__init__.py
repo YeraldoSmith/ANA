@@ -10,7 +10,7 @@ License: MIT
 
 __version__ = "0.3.0"
 __author__ = "Yeraldo Smith"
-__github__ = "https://github.com/YeraldoSmith"
+__github__ = "https://github.com/YeraldoSmith/ANA"
 __protocol_version__ = 1
 
 from ana.codebook import (
