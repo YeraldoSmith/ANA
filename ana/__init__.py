@@ -8,7 +8,7 @@ Author:  Yeraldo Smith (https://github.com/YeraldoSmith)
 License: AGPL-3.0-or-later
 """
 
-__version__ = "0.3.0"
+__version__ = "0.2.1"
 __author__ = "Yeraldo Smith"
 __github__ = "https://github.com/YeraldoSmith/ANA"
 __protocol_version__ = 1

@@ -25,6 +25,7 @@ from ana import (
     Session, SessionConfig,
 )
 from ana.reliability import parse_codon_payload
+from relay.token_counter import count, label as token_label
 
 app = Flask(__name__)
 
@@ -107,10 +108,17 @@ def json_relay():
     stats['json_calls'] += 1
     stats['total_json_tokens'] += len(json_resp) // 4
 
+    # Token count: call-side JSON + response data (both measured with same counter)
+    call_tok = count(json.dumps(data, ensure_ascii=False))
+    resp_tok = count(json_resp)
+
     return jsonify({
         'mode': 'json',
         'result': result,
-        'tokens_est': len(json_resp) // 4,
+        'call_tokens': call_tok,
+        'resp_tokens': resp_tok,
+        'total_tokens': call_tok + resp_tok,
+        'token_label': token_label(),
         'latency_ms': round((time.perf_counter() - t0) * 1000, 3),
     })
 
@@ -143,6 +151,11 @@ def codon_relay():
     stats['codon_calls'] += 1
     stats['total_codon_tokens'] += 6  # @s.o.t params format
 
+    # Token count: codon format (call-side) + same response data
+    codon_text = f'@{svc_id}.{op_id}.{tpl_id} ' + ' '.join(str(p) for p in params)
+    call_tok = count(codon_text)
+    resp_tok = count(json.dumps(result, ensure_ascii=False))
+
     return jsonify({
         'mode': 'codon',
         'codon': f'@{svc_id}.{op_id}.{tpl_id}',
@@ -150,7 +163,10 @@ def codon_relay():
         'params': dict(zip(tpl.params, params)),
         'result': result,
         'wire_bytes': len(wire),
-        'tokens_est': 6,
+        'call_tokens': call_tok,
+        'resp_tokens': resp_tok,
+        'total_tokens': call_tok + resp_tok,
+        'token_label': token_label(),
         'latency_ms': round((time.perf_counter() - t0) * 1000, 3),
     })
 

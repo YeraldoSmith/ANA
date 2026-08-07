@@ -332,23 +332,29 @@ class ANASecureSession:
 
     # ── AEAD encrypt/decrypt ──────────────────────────────────────
 
-    def encrypt(self, plaintext: bytes) -> bytes:
-        """Encrypt a packet payload with the session AEAD key."""
+    def encrypt(self, plaintext: bytes, packet_seq: int = 0) -> bytes:
+        """Encrypt a packet payload with the session AEAD key.
+
+        Uses the packet's actual sequence number (from the ANA header) as
+        the AEAD nonce, NOT an internal counter. This means UDP reordering
+        or packet loss does not cause AEAD nonce desynchronization.
+        """
         if self._aead_send is None:
             raise RuntimeError("session not established")
-        nonce = self._send_seq.to_bytes(8, 'big') + b'\x00\x00\x00\x00'
-        self._send_seq += 1
+        nonce = packet_seq.to_bytes(8, 'big') + b'\x00\x00\x00\x00'
         return self._aead_send.encrypt(plaintext, nonce)
 
-    def decrypt(self, ciphertext: bytes) -> Optional[bytes]:
-        """Decrypt a packet payload. Returns None on auth failure."""
+    def decrypt(self, ciphertext: bytes, packet_seq: int = 0) -> Optional[bytes]:
+        """Decrypt a packet payload. Returns None on auth failure.
+
+        Uses the received packet's sequence number as the nonce.
+        This tolerates UDP packet loss and reordering — a dropped packet
+        does not cause permanent AEAD desynchronization.
+        """
         if self._aead_recv is None:
             raise RuntimeError("session not established")
-        nonce = self._recv_seq.to_bytes(8, 'big') + b'\x00\x00\x00\x00'
-        result = self._aead_recv.decrypt(ciphertext, nonce)
-        if result is not None:
-            self._recv_seq += 1
-        return result
+        nonce = packet_seq.to_bytes(8, 'big') + b'\x00\x00\x00\x00'
+        return self._aead_recv.decrypt(ciphertext, nonce)
 
     @property
     def is_established(self) -> bool:
