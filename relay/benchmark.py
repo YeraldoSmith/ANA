@@ -1,104 +1,100 @@
 #!/usr/bin/env python3
 """
-ANA Relay vs Traditional Relay — Cost Comparison.
+ANA Relay vs Traditional Relay -- Cost Comparison.
 
-Estimates the real-world cost savings of using ANA codon dispatch
-vs traditional JSON relay for an API gateway at scale.
+Every number in this script comes from token_counter.count() applied
+to real text strings. No hardcoded token counts.
 
 Run: python3 relay/benchmark.py
 """
 
-import sys, os
+import sys, os, json
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from relay.token_counter import count, label as token_label
 
-# ─── Assumptions ───────────────────────────────────────────────────
+# Measured from real text, not hardcoded
+JSON_CALL = json.dumps({
+    "id": "call_abc", "type": "function",
+    "function": {"name": "weather.get_forecast",
+                 "arguments": '{"city":"Beijing","days":7}'}
+}, ensure_ascii=False)
 
-CALLS_PER_DAY = 10_000      # Typical relay daily volume
-DAYS_PER_MONTH = 30
-OUTPUT_TOKEN_PRICE = 15.0    # $ per 1M tokens (GPT-4 level)
-INPUT_TOKEN_PRICE = 3.0      # $ per 1M tokens
+CODON_CALL = "@1.1.0 Beijing 7"
 
-# Token counts (measured with cl100k_base estimator)
-JSON_TOKENS_PER_CALL = 62    # OpenAI tool_call format
-CODON_TOKENS_PER_CALL = 6    # @s.o.t format
-JSON_RESPONSE_TOKENS = 50    # Reading the response
-CODON_RESPONSE_TOKENS = 3    # @128.1.0 {json}
+RESPONSE_DATA = json.dumps({
+    "city": "Beijing", "days": 7,
+    "forecast": [{"day": 1, "high": 22, "low": 12, "condition": "Sunny"},
+                 {"day": 2, "high": 24, "low": 14, "condition": "Cloudy"}]
+}, ensure_ascii=False)
 
-# ─── Calculation ───────────────────────────────────────────────────
+JSON_RESP = json.dumps({
+    "id": "call_abc", "type": "function",
+    "function": {"name": "weather.get_forecast", "arguments": RESPONSE_DATA}
+}, ensure_ascii=False)
 
-def monthly_cost(calls_per_day, tokens_per_call, resp_tokens):
-    monthly_tokens = (tokens_per_call + resp_tokens) * calls_per_day * DAYS_PER_MONTH
-    # Output tokens cost more (LLM generates them)
-    # Input tokens cost less (LLM reads them)
-    output_cost = tokens_per_call * calls_per_day * DAYS_PER_MONTH / 1_000_000 * OUTPUT_TOKEN_PRICE
-    input_cost = resp_tokens * calls_per_day * DAYS_PER_MONTH / 1_000_000 * INPUT_TOKEN_PRICE
-    return monthly_tokens, output_cost + input_cost
+CODON_RESP = f"@128.1.0 {RESPONSE_DATA}"
 
-json_tok, json_cost = monthly_cost(CALLS_PER_DAY, JSON_TOKENS_PER_CALL, JSON_RESPONSE_TOKENS)
-ana_tok, ana_cost = monthly_cost(CALLS_PER_DAY, CODON_TOKENS_PER_CALL, CODON_RESPONSE_TOKENS)
+JSON_PROMPT = """You have access to the following functions:
+- get_forecast(city, days): get weather forecast
+- get_current(city): get current weather
+- get_alerts(region, severity): get weather alerts
+Call them using the function calling format."""
 
-# ─── Report ────────────────────────────────────────────────────────
+CODON_PROMPT = """When calling functions, use format: @service.operation.template param1 param2
+Available: @1.1.0 <city> <days> @1.2.0 <city> @2.1.0 <region> <severity>"""
 
-print("=" * 65)
-print("ANA RELAY vs TRADITIONAL RELAY — Cost Comparison")
-print("=" * 65)
-print(f"""
-Assumptions:
-  Daily calls:       {CALLS_PER_DAY:,}
-  Output token price: ${OUTPUT_TOKEN_PRICE}/M tokens
-  Input token price:  ${INPUT_TOKEN_PRICE}/M tokens
-""")
+# Count everything
+json_call_tok = count(JSON_CALL)
+codon_call_tok = count(CODON_CALL)
+resp_data_tok = count(RESPONSE_DATA)   # same for both
+json_resp_tok = count(JSON_RESP)
+codon_resp_tok = count(CODON_RESP)
+json_ctx_tok = count(JSON_PROMPT)
+codon_ctx_tok = count(CODON_PROMPT)
 
-print(f"{'Metric':<35} {'JSON Relay':>12} {'ANA Relay':>12}")
-print("-" * 65)
-print(f"{'Tokens per call (output)':<35} {JSON_TOKENS_PER_CALL:>12} {CODON_TOKENS_PER_CALL:>12}")
-print(f"{'Tokens per call (input)':<35} {JSON_RESPONSE_TOKENS:>12} {CODON_RESPONSE_TOKENS:>12}")
-print(f"{'Total tokens per round-trip':<35} {JSON_TOKENS_PER_CALL + JSON_RESPONSE_TOKENS:>12} {CODON_TOKENS_PER_CALL + CODON_RESPONSE_TOKENS:>12}")
-print(f"{'Token reduction':<35} {'':>12} {(1 - (CODON_TOKENS_PER_CALL + CODON_RESPONSE_TOKENS) / (JSON_TOKENS_PER_CALL + JSON_RESPONSE_TOKENS)) * 100:>11.0f}%")
+CALLS_PER_DAY = 10_000
+CONVOS_PER_DAY = 2_000   # 5 calls per conversation
+PRICE_OUT = 15.0
+PRICE_IN = 3.0
+DAYS = 30
+
+# Report
+print(f"ANA Relay Token Measurement ({token_label()})")
+print("=" * 60)
 print()
-print(f"{'Monthly tokens':<35} {json_tok:>12,} {ana_tok:>12,}")
-print(f"{'Monthly cost':<35} ${json_cost:>11.2f} ${ana_cost:>11.2f}")
-print(f"{'Annual cost':<35} ${json_cost*12:>11.2f} ${ana_cost*12:>11.2f}")
-print(f"{'Annual savings':<35} {'':>12} ${(json_cost-ana_cost)*12:>11.2f}")
+print("SINGLE CALL: get_forecast(city=Beijing, days=7)")
+print("-" * 60)
+print(f"{'':<25} {'JSON':>12} {'ANA':>12} {'Note'}")
+print(f"{'Call output tokens':<25} {json_call_tok:>12} {codon_call_tok:>12}")
+print(f"{'Response tokens':<25} {json_resp_tok:>12} {codon_resp_tok:>12}  same data inside")
+print(f"{'Context (amortized)':<25} {json_ctx_tok:>12} {codon_ctx_tok:>12}")
+print(f"{'Call reduction':<25} {'':>12} {(1-codon_call_tok/json_call_tok)*100:>11.0f}%")
 print()
-print("-" * 65)
-
-# CPU comparison
-print("""
-CPU Comparison (per call):
-  JSON relay:  json.loads() → dict traversal → type check → forward
-  ANA relay:   regex match → codebook[S][O][T] → forward
-
-  For a relay handling {:,} calls/day, the JSON parsing overhead
-  is ~{}ms/day of CPU time (vs ~{}ms/day for codon parsing).
-""".format(
-    CALLS_PER_DAY,
-    int(CALLS_PER_DAY * 0.0015),  # ~1.5µs per json.loads
-    int(CALLS_PER_DAY * 0.0003),  # ~0.3µs per table lookup
-))
-
-# Scale analysis
-print("-" * 65)
-print("AT SCALE (varying daily volume):")
-print(f"{'Daily Calls':<15} {'JSON/mo':>10} {'ANA/mo':>10} {'Savings/yr':>12}")
-print("-" * 65)
-for calls in [1_000, 10_000, 50_000, 100_000, 1_000_000]:
-    _, jc = monthly_cost(calls, JSON_TOKENS_PER_CALL, JSON_RESPONSE_TOKENS)
-    _, ac = monthly_cost(calls, CODON_TOKENS_PER_CALL, CODON_RESPONSE_TOKENS)
-    print(f"{calls:<15,} ${jc:>9.2f} ${ac:>9.2f} ${(jc-ac)*12:>11.2f}")
-
+print("THREE-SEGMENT TOTAL (per call, context amortized over 5 calls)")
+print("-" * 60)
+json_call_total = json_call_tok + json_resp_tok + json_ctx_tok / 5
+codon_call_total = codon_call_tok + codon_resp_tok + codon_ctx_tok / 5
+print(f"  JSON total:  {json_call_total:.0f} tokens/call")
+print(f"  ANA total:   {codon_call_total:.0f} tokens/call")
+print(f"  Reduction:   {(1-codon_call_total/json_call_total)*100:.0f}%")
 print()
-print("=" * 65)
-print("CONCLUSION")
-print("=" * 65)
-print(f"""
-ANA relay saves {int((1 - ana_cost/json_cost) * 100)}% on token costs vs traditional JSON relay.
-At {CALLS_PER_DAY:,} calls/day, that's ${(json_cost-ana_cost)*12:,.0f}/year.
-
-The savings come from:
-  1. Compact codon format (@s.o.t = 6 tokens vs 62 for OpenAI tool_call)
-  2. Minimal response format (3 tokens vs 50)
-  3. No JSON parser CPU overhead on the relay side
-
-Any LLM can output @s.o.t format — no model changes needed.
-""")
+print("COST MODEL (10,000 calls/day)")
+print("-" * 60)
+json_out_cost = json_call_tok * CALLS_PER_DAY * DAYS / 1e6 * PRICE_OUT
+codon_out_cost = codon_call_tok * CALLS_PER_DAY * DAYS / 1e6 * PRICE_OUT
+json_in_cost = json_resp_tok * CALLS_PER_DAY * DAYS / 1e6 * PRICE_IN
+codon_in_cost = codon_resp_tok * CALLS_PER_DAY * DAYS / 1e6 * PRICE_IN
+json_ctx_cost = json_ctx_tok * CONVOS_PER_DAY * DAYS / 1e6 * PRICE_IN
+codon_ctx_cost = codon_ctx_tok * CONVOS_PER_DAY * DAYS / 1e6 * PRICE_IN
+json_total_cost = json_out_cost + json_in_cost + json_ctx_cost
+codon_total_cost = codon_out_cost + codon_in_cost + codon_ctx_cost
+print(f"  JSON monthly:  ${json_total_cost:.2f}")
+print(f"  ANA monthly:   ${codon_total_cost:.2f}")
+print(f"  Monthly save:  ${json_total_cost - codon_total_cost:.2f}")
+print(f"  Annual save:   ${(json_total_cost - codon_total_cost) * 12:.2f}")
+print()
+print("NOTE: Response data tokens are identical (same JSON payload).")
+print("      ANA saves on call-side format + response wrapper only.")
+print("      Previous 90% claim was algorithm error (assumed response")
+print("      data shrinks — it does not). Correct total: ~{}%."
+      .format(round((1-codon_call_total/json_call_total)*100)))

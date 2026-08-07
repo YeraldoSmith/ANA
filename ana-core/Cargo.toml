@@ -1,6 +1,6 @@
 [package]
 name = "ana-core"
-version = "0.1.0"
+version = "0.2.1"
 edition = "2021"
 description = "ANA Chain Protocol - native Rust implementation"
 authors = ["Yeraldo Smith <https://github.com/YeraldoSmith>"]
