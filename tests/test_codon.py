@@ -62,6 +62,12 @@ class TestParamEncoding:
         values, _ = decode_params(encoded, ["bool", "bool"])
         assert values == [True, False]
 
+    def test_bytes_params_do_not_leave_a_separator(self):
+        encoded = encode_params([b'\x00\xff', 7], ["bytes", "uint8"])
+        values, offset = decode_params(encoded, ["bytes", "uint8"])
+        assert values == [b'\x00\xff', 7]
+        assert offset == len(encoded)
+
     def test_type_count_mismatch(self):
         with pytest.raises(ValueError):
             encode_params(["a", "b"], ["string"])
