@@ -10,6 +10,7 @@ so they never need to be stored or transmitted in full.
 
 import hashlib
 import hmac
+import json
 import struct
 from dataclasses import dataclass, field
 from typing import Optional
@@ -52,6 +53,7 @@ class CodebookVersion:
     version: int
     seed_hash: bytes       # SHA-256
     capabilities: int = 0  # bitmask
+    content_hash: bytes = b''  # SHA-256 of the canonical codebook definition
 
     CAP_CODON = 1 << 0
     CAP_NOISE = 1 << 1
@@ -59,12 +61,15 @@ class CodebookVersion:
     CAP_ROTATE = 1 << 3
 
     def to_dict(self) -> dict:
-        return {
+        result = {
             'codebook_id': self.codebook_id,
             'version': self.version,
             'seed_hash': self.seed_hash.hex(),
             'capabilities': self.capabilities,
         }
+        if self.content_hash:
+            result['content_hash'] = self.content_hash.hex()
+        return result
 
     @classmethod
     def from_dict(cls, d: dict) -> 'CodebookVersion':
@@ -73,6 +78,7 @@ class CodebookVersion:
             version=d['version'],
             seed_hash=bytes.fromhex(d['seed_hash']),
             capabilities=d.get('capabilities', 0),
+            content_hash=bytes.fromhex(d['content_hash']) if d.get('content_hash') else b'',
         )
 
 
@@ -245,10 +251,33 @@ class Codebook:
     def get_template(self, service_id: int, op_id: int, template_id: int) -> TemplateDef:
         return self.services[service_id]._operations[op_id]._templates[template_id]
 
+    def canonical_definition(self) -> bytes:
+        """Return the stable bytes used to identify this codebook contract.
+
+        The fingerprint deliberately includes every field that changes how a
+        codon is interpreted, including the seed hash and parameter types.
+        It excludes ``content_hash`` itself so it is never self-referential.
+        """
+        return json.dumps(
+            self.to_dict(include_content_hash=False),
+            sort_keys=True,
+            separators=(',', ':'),
+            ensure_ascii=False,
+        ).encode('utf-8')
+
+    @property
+    def content_hash(self) -> bytes:
+        """SHA-256 fingerprint of the canonical codebook contract."""
+        return hashlib.sha256(self.canonical_definition()).digest()
+
+    def verify_content_hash(self) -> bool:
+        """Validate a declared fingerprint, if the definition includes one."""
+        return not self.version.content_hash or self.version.content_hash == self.content_hash
+
     # -- serialization --
 
-    def to_dict(self) -> dict:
-        return {
+    def to_dict(self, include_content_hash: bool = True) -> dict:
+        result = {
             'codebook_id': self.version.codebook_id,
             'version': self.version.version,
             'seed_hash': self.version.seed_hash.hex(),
@@ -269,15 +298,18 @@ class Codebook:
                                     'types': t.types,
                                     'defaults': t.defaults,
                                 }
-                                for t in op.templates
+                                for t in sorted(op.templates, key=lambda template: template.id)
                             ]
                         }
-                        for op in svc.operations
+                        for op in sorted(svc.operations, key=lambda op: op.id)
                     ]
                 }
-                for svc in self.services.values()
+                for svc in sorted(self.services.values(), key=lambda svc: svc.id)
             ]
         }
+        if include_content_hash and self.version.content_hash:
+            result['content_hash'] = self.version.content_hash.hex()
+        return result
 
     @classmethod
     def from_dict(cls, d: dict) -> 'Codebook':
@@ -286,6 +318,7 @@ class Codebook:
             version=d['version'],
             seed_hash=bytes.fromhex(d['seed_hash']),
             capabilities=d.get('capabilities', 0),
+            content_hash=bytes.fromhex(d['content_hash']) if d.get('content_hash') else b'',
         )
         services = []
         for sd in d['services']:
@@ -311,7 +344,10 @@ class Codebook:
                 ]
             )
             services.append(svc)
-        return cls(version, services)
+        codebook = cls(version, services)
+        if not codebook.verify_content_hash():
+            raise ValueError("codebook content_hash does not match its definition")
+        return codebook
 
     @classmethod
     def from_yaml_file(cls, path: str) -> 'Codebook':

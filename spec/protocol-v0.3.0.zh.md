@@ -1,8 +1,8 @@
-# ANA 链协议规范 v0.3.0
+# ANA 链协议规范 v0.3.0（草案）
 
 ## 摘要
 
-ANA 链是一种 AI 原生通信协议，用紧凑的二进制"密码子"（codon）替代文本序列化（JSON/XML）。密码子是预共享码本（codebook）支持的语义标识符，灵感来自蛋白质合成中密码子-反密码子的生物配对机制。ANA 消除了 LLM Agent ↔ API 通信中占主导地位的序列化开销。
+ANA 链是一种 AI 原生的紧凑调用层，用预共享码本（codebook）支持的二进制"密码子"（codon）表示 API 操作。它能减少 Agent ↔ API 重复调用的格式开销，但不压缩任意响应数据，也不替代传输层安全。
 
 ---
 
@@ -25,8 +25,8 @@ ANA 链是一种 AI 原生通信协议，用紧凑的二进制"密码子"（codo
 | 目标 | 机制 |
 |------|------|
 | 消除 JSON 序列化开销 | 二进制密码子直接映射到 API 操作 |
-| 降低 LLM Token 消耗 | 密码子 0~5 token vs JSON 50~200 token |
-| 无需加密即可抗窃听 | 没有码本则密码子为不透明随机字节 |
+| 降低 LLM Token 消耗 | 紧凑密码子文本可减少重复的工具调用语法 |
+| 安全部署 | 通过 TLS/QUIC 提供认证和保密；码本不透明性不是加密 |
 | 优雅降级 | 码本不匹配时自动回退到 JSON-RPC 2.0 模式 |
 | 与现有协议分层协作 | 工作在 MCP、A2A 下层；与 TLS 互补 |
 
@@ -103,13 +103,40 @@ CodebookVersion:
   version:      uint16      # 单调递增 0~65535
   seed_hash:    bytes[32]   # codebook_seed 的 SHA-256
   capabilities: uint32      # 能力位掩码
+  content_hash: bytes[32]   # 规范化码本定义的 SHA-256
 ```
+
+`content_hash` 对规范化后的 UTF-8 JSON 计算 SHA-256：对象键按字典序排序、
+不包含无意义空白，包含 `codebook_id`、`version`、`seed_hash`、
+`capabilities` 与 `services`；服务、操作和模板均按数字 ID 排序；哈希字段本身
+不参与计算。声明了 `content_hash` 的码本若校验不匹配，接收方必须拒绝。
 
 ---
 
 ## 3. 数据包格式
 
-### 3.1 通用包头（12 字节）
+### 3.1 v0.3 调用封包（已实现的草案 profile）
+
+`@service.operation.template` 是给 LLM 使用的文本表示，不是传输格式。
+v0.3 的二进制调用契约可装载在 CODON 包、MCP 消息、HTTP body 或 QUIC stream 中：
+
+```
+偏移   大小  字段
+----   ----  ----
+0      4     魔数：ASCII "ANA3"
+4      1     封包版本：1
+5      1     Flags（bit 0 = fire-and-forget；其余保留且必须为 0）
+6      32    码本 content_hash
+38     16    request_id（重试时保持不变）
+54     4     deadline_ms（uint32；0 表示未设置协议级截止时间）
+58     2     codon_length（uint16，大端）
+60     N     恰好一个编码后的密码子
+```
+
+接收方必须拒绝未知版本、长度错误、尾随字节或码本哈希不一致的封包。协议仅提供
+至少一次投递；需要恰好一次业务效果的 API 必须将 `request_id` 作为幂等键。
+
+### 3.2 通用包头（12 字节）
 
 ```
 （无 AEAD 模式 — v0.2.0 及更早版本）
@@ -139,7 +166,7 @@ CodebookVersion:
 
 协议头总开销：**12 字节**（非加密）/ **28 字节**（AEAD 加密，含 16 字节 auth tag）。
 
-### 3.2 包类型
+### 3.3 包类型
 
 | 类型值 | 名称 | 方向 | 说明 |
 |--------|------|------|------|
@@ -157,7 +184,7 @@ CodebookVersion:
 
 > **v0.3.0 变更**：NEGOTIATE → HELLO，NEGOTIATE_ACK → HELLO_ACK，NEGOTIATE_CONFIRM → CONFIRM。新增 RESUME / RESUME_ACK / REKEY。
 
-### 3.3 密码子编码
+### 3.4 密码子编码
 
 载荷格式：
 
@@ -256,9 +283,9 @@ CodebookVersion:
 
 ## 4. 协议流程
 
-### 4.1 阶段 1：安全握手（ANA-S）
+### 4.1 阶段 1：安全握手（ANA-S，未来 profile）
 
-ANA-S 是 ANA 链的自有安全层，完全替代 TLS。它采用 **X25519 ECDH** 密钥交换 + **Ed25519** 签名 + **ChaCha20-Poly1305** AEAD 加密。设计参考 Noise Protocol Framework 的 `IK` 模式（WhatsApp / WireGuard 同款）。
+ANA-S 是未来的实验性 profile。在使用经过独立审查的 Noise 实现、完成静态身份密钥绑定前，部署必须使用 TLS 或 QUIC/TLS 提供保密性和对端认证。码本保密、HMAC 与当前原型握手均不能替代 TLS。
 
 **设计原则**：
 - 信任根：Agent Identity（AID），32 字节唯一标识 + Ed25519 公钥
@@ -524,8 +551,8 @@ Agent                                API
 
 ### 5.4 ANA-S：自有安全层（v0.3.0）
 
-> **ANA-S 从 v0.3.0 起取代 TLS 作为 ANA 的原生安全层。**  
-> TLS 不再被依赖，但 ANA 仍可与 TLS 叠加部署以增加防御纵深。
+> **ANA-S 仍是未来的实验性安全 profile。**
+> 在完成独立审查与固定身份绑定前，TLS/QUIC-TLS 是生产部署的必需安全层。
 
 #### 5.4.1 设计动机
 

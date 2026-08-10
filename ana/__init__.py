@@ -22,6 +22,7 @@ from ana.codon import (
     encode_varint, decode_varint,
     encode_params, decode_params,
 )
+from ana.envelope import CallEnvelope, FIRE_AND_FORGET, KNOWN_FLAGS, WIRE_VERSION
 from ana.packet import (
     Packet, PacketType, PacketFlags, serialize_packet, deserialize_packet,
     make_negotiate, make_negotiate_ack, make_negotiate_confirm,
@@ -54,6 +55,8 @@ __all__ = [
     # Codon
     "CodonEncoder", "CodonDecoder",
     "encode_varint", "decode_varint", "encode_params", "decode_params",
+    # v0.3 call envelope
+    "CallEnvelope", "FIRE_AND_FORGET", "KNOWN_FLAGS", "WIRE_VERSION",
     # Packet
     "Packet", "PacketType", "PacketFlags", "serialize_packet", "deserialize_packet",
     "make_negotiate", "make_negotiate_ack", "make_negotiate_confirm",

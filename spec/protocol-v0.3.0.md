@@ -1,8 +1,8 @@
-# ANA Chain Protocol Specification v0.3.0
+# ANA Chain Protocol Specification v0.3.0 (draft)
 
 ## Abstract
 
-ANA Chain is an AI-native communication protocol that replaces text-based serialization (JSON/XML) with compact binary "codons" — semantic identifiers backed by a pre-shared codebook. Inspired by the biological codon–anticodon pairing in protein synthesis, ANA eliminates the serialization tax that dominates LLM Agent ↔ API communication.
+ANA Chain is an AI-native compact-call layer that represents API operations as binary "codons" backed by a pre-shared codebook. Inspired by the biological codon–anticodon pairing in protein synthesis, ANA reduces the format overhead of repetitive Agent ↔ API calls. It does not compress arbitrary response data and does not replace transport security.
 
 ---
 
@@ -25,8 +25,8 @@ ANA Chain is an AI-native communication protocol that replaces text-based serial
 | Goal | Mechanism |
 |------|-----------|
 | Eliminate JSON serialization overhead | Binary codons map directly to API operations |
-| Reduce LLM token consumption | Codons are 0–5 tokens vs 50–200 for JSON |
-| Resist eavesdropping without encryption | Codons are opaque without the codebook |
+| Reduce LLM token consumption | Compact codon text can reduce repeated tool-call syntax |
+| Secure deployment | Run ANA over authenticated TLS/QUIC; codebook opacity is not encryption |
 | Graceful degradation | Automatic fallback to JSON-RPC 2.0 when codebooks mismatch |
 | Layer with existing protocols | Works underneath MCP, A2A; complements TLS |
 
@@ -101,13 +101,46 @@ CodebookVersion:
   version:      uint16      # monotonic 0–65535
   seed_hash:    bytes[32]   # SHA-256 of codebook_seed
   capabilities: uint32      # bitmask
+  content_hash: bytes[32]   # SHA-256 of the canonical definition
 ```
+
+`content_hash` is the SHA-256 of UTF-8 JSON rendered with sorted object keys,
+no insignificant whitespace, and the fields `codebook_id`, `version`,
+`seed_hash`, `capabilities`, and `services`. Services, operations and templates
+are ordered by numeric ID. The hash field itself is excluded. A peer MUST reject
+a definition whose declared `content_hash` does not match this calculation.
 
 ---
 
 ## 3. Wire Format
 
-### 3.1 Common Packet Header
+### 3.1 v0.3 Call Envelope (implemented draft profile)
+
+The LLM-facing `@service.operation.template` notation is a text presentation
+only. The transport-independent call envelope below is the v0.3 binary contract.
+It binds a call to the exact codebook definition and provides retry-safe request
+identity. It can be carried in a CODON packet, MCP message, HTTP body, or QUIC
+stream.
+
+```
+Offset  Size  Field
+------  ----  -----
+0       4     Magic: ASCII "ANA3"
+4       1     Envelope version: 1
+5       1     Flags (bit 0 = fire-and-forget; bits 1-7 reserved, MUST be 0)
+6       32    Codebook content_hash
+38      16    request_id (opaque; stable across retries)
+54      4     deadline_ms (uint32; 0 means no protocol-level deadline)
+58      2     codon_length (uint16, big-endian)
+60      N     exactly one encoded codon
+```
+
+Receivers MUST reject unknown envelope versions, invalid lengths, trailing bytes,
+or a `content_hash` that differs from the selected codebook. The protocol offers
+at-least-once delivery; APIs that need exactly-once effects MUST use
+`request_id` as an idempotency key.
+
+### 3.2 Common Packet Header
 
 ```
 (Plaintext mode — v0.2.0 and earlier)
@@ -137,7 +170,7 @@ Offset  Size  Field
 
 Total header overhead: **12 bytes** (plaintext) / **28 bytes** (AEAD encrypted, includes 16-byte auth tag).
 
-### 3.2 Packet Types
+### 3.3 Packet Types
 
 | Type | Name | Direction | Description |
 |------|------|-----------|-------------|
@@ -155,7 +188,7 @@ Total header overhead: **12 bytes** (plaintext) / **28 bytes** (AEAD encrypted, 
 
 > **v0.3.0 change**: NEGOTIATE → HELLO, NEGOTIATE_ACK → HELLO_ACK, NEGOTIATE_CONFIRM → CONFIRM. Added RESUME / RESUME_ACK / REKEY.
 
-### 3.3 Codon Encoding
+### 3.4 Codon Encoding
 
 Payload format:
 
@@ -253,9 +286,12 @@ Packets are padded to the nearest standard size: 64, 128, 256, 512, or 1024 byte
 
 ## 4. Protocol Flow
 
-### 4.1 Phase 1: Secure Handshake (ANA-S)
+### 4.1 Phase 1: Secure Handshake (ANA-S, future profile)
 
-ANA-S is ANA Chain's native security layer, fully replacing TLS. It uses **X25519 ECDH** key exchange + **Ed25519** signatures + **ChaCha20-Poly1305** AEAD encryption, inspired by the Noise Protocol Framework's `IK` pattern (used by WhatsApp and WireGuard).
+ANA-S is a future experimental profile. Until an independently reviewed Noise
+implementation and authenticated static-key binding exist, deployments MUST use
+TLS or QUIC/TLS for confidentiality and peer authentication. Codebook secrecy,
+HMAC, and the current prototype handshake are not substitutes for TLS.
 
 **Design principles**:
 - Trust root: Agent Identity (AID) — 32-byte unique ID + Ed25519 public key

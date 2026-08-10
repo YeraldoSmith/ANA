@@ -1,15 +1,15 @@
 # ANA — AI-Native Communication Protocol
 
 [![Version](https://img.shields.io/badge/version-0.2.1-blue)](https://github.com/YeraldoSmith/ANA)
-[![Tests](https://img.shields.io/badge/tests-79%20%2B%2013%20(Rust)-green)](https://github.com/YeraldoSmith/ANA)
+[![Tests](https://img.shields.io/badge/tests-89%20%2B%2013%20(Rust)-green)](https://github.com/YeraldoSmith/ANA)
 [![License](https://img.shields.io/badge/license-AGPLv3-blue)](LICENSE)
 [![Status](https://img.shields.io/badge/status-prototype-orange)](https://github.com/YeraldoSmith/ANA)
 
-**AI-Native Communication Protocol** — replacing JSON serialization with codon-based semantic addressing for LLM Agent ↔ API communication.
+**AI-Native Communication Protocol** — a compact, codebook-backed call layer for LLM Agent ↔ API communication.
 
-ANA encodes API operations as compact binary "codons" via a pre-shared codebook, inspired by codon–anticodon pairing in protein synthesis. This eliminates the serialization/deserialization step that dominates JSON-based Agent communication.
+ANA encodes API operations as compact binary "codons" via a pre-shared codebook, inspired by codon–anticodon pairing in protein synthesis. It reduces repeated tool-call format overhead; it does not compress arbitrary response data or replace TLS.
 
-> **Status: Prototype (v0.2.0).** Core encoding pipeline is implemented and benchmarked. LLM token claims are extrapolated, not yet measured with a real model. Native security layer (ANA-S) is specified but not yet implemented — see [Roadmap](#roadmap).
+> **Status: Prototype (v0.2.1).** Core encoding and relay pipelines are implemented. The v0.3 strict call-envelope profile is available as a draft. Token figures are tokenizer estimates; real-model compliance remains to be measured.
 
 ---
 
@@ -41,8 +41,8 @@ ANA encodes API operations as compact binary "codons" via a pre-shared codebook,
 ## Quick Start
 
 ```bash
-# Python library
-pip install pyyaml
+# Python library and test dependencies
+pip install -r requirements.txt
 cd examples
 python3 agent_demo.py
 
@@ -76,15 +76,15 @@ python3 server.py
 │     - Codon codec                   │
 │     - Reliability (ACK/retry/ping)  │
 │     - HMAC integrity (default on)   │
-│     - ANA-S (X25519+Ed25519+AEAD)   │
+│     - v0.3 call envelope             │
 ├─────────────────────────────────────┤
-│   TCP / UDP (TLS optional)          │
+│   TCP / UDP / QUIC + TLS            │
 ├─────────────────────────────────────┤
 │   TCP / UDP                         │
 └─────────────────────────────────────┘
 ```
 
-### Implemented (v0.2.0)
+### Implemented (v0.2.1)
 
 | Layer | Mechanism | Status |
 |-------|-----------|--------|
@@ -94,12 +94,13 @@ python3 server.py
 | **DoS Protection** | 1KB Bloom filter pre-screening | ✅ |
 | **Traffic Obfuscation** | Fixed-size padding + noise codons | ✅ |
 | **Fallback** | JSON-RPC 2.0 on codebook mismatch | ✅ |
+| **Call contract (draft)** | Codebook fingerprint, request ID, deadline, strict frame | ✅ |
 
 ### Planned
 
 | Feature | Target | Spec |
 |---------|--------|------|
-| **ANA-S security layer** | v0.3.0 | X25519 + Ed25519 + ChaCha20-Poly1305 AEAD (Noise_IK), replace TLS dependency |
+| **ANA-S security profile** | Future | Use a reviewed Noise implementation with pinned identities; TLS remains required until then |
 | **LLM token integration** | v0.4.0 | Real LLM measurement, special token / constrained decoding for codon output |
 | **Codebook registry** | v0.4.0 | Distributed codebook version discovery |
 | **Multi-language SDK** | v0.4.0 | TypeScript, Go |
@@ -118,6 +119,7 @@ ANA/
 ├── ana/                              # Python reference implementation
 │   ├── codebook.py                   # Codebook model + HKDF + ChaCha20 PRNG
 │   ├── codon.py                      # Codon codec + LEB128 varint
+│   ├── envelope.py                   # v0.3 strict call contract
 │   ├── packet.py                     # Packet format + CRC-16 + HMAC
 │   ├── session.py                    # Session state machine + anti-replay
 │   ├── negotiator.py                 # TCP negotiation handshake
@@ -131,7 +133,7 @@ ANA/
 ├── agent/                            # Minimal ANA-compatible Agent (web UI)
 ├── testbench/                        # LAN comparison dashboard (JSON vs ANA)
 ├── benchmarks/                       # Performance benchmarks
-├── tests/                            # Python test suite (91 tests)
+├── tests/                            # Python test suite
 └── examples/                         # Demo code
 ```
 
@@ -139,7 +141,7 @@ ANA/
 
 ## Specification
 
-- [English spec](spec/protocol-v0.3.0.md) — v0.3.0 (includes planned ANA-S; current code implements v0.2.0)
+- [English spec](spec/protocol-v0.3.0.md) — v0.3.0 draft (strict call envelope; ANA-S remains a future profile)
 - [Chinese spec / 中文](spec/protocol-v0.3.0.zh.md)
 
 Key features (implemented):
@@ -147,7 +149,7 @@ Key features (implemented):
 - 12-byte packet header (vs HTTP 200+ bytes)
 - Sub-chain rotation every 1000 packets
 - Automatic JSON-RPC 2.0 fallback on codebook mismatch
-- 91 Python tests + 13 Rust tests
+- 89 Python tests + 13 Rust tests
 
 ---
 
@@ -155,9 +157,9 @@ Key features (implemented):
 
 | Version | What | ETA |
 |---------|------|-----|
-| **v0.2.0** (current) | Codon codec, reliability, HMAC, Bloom, fallback | Done |
-| **v0.2.1** | Fix code review findings, add CI, PyPI publish | ~1 week |
-| **v0.3.0** | `security.py` — ANA-S native security (X25519+Ed25519+ChaCha20-Poly1305) | ~2-3 weeks |
+| **v0.2.1** (current) | Codon codec, reliability, HMAC, Bloom, fallback | Done |
+| **v0.3.0** | Strict call contract, codebook fingerprint, request semantics | In progress |
+| **ANA-S profile** | Reviewed Noise implementation, pinned identities, AEAD | Research; do not replace TLS yet |
 | **v0.4.0** | Real LLM measurement, codebook registry, TypeScript SDK | ~1-2 months |
 
 ---

@@ -98,7 +98,7 @@ _PARAM_DECODERS = {
 def encode_params(params: list, types: list[str]) -> bytes:
     """Encode a list of parameter values according to their types.
 
-    Variable-length types (string, bytes) are null-terminated.
+    Strings are NUL-terminated; bytes are uint16 length-prefixed.
     Fixed-length types are packed directly.
     """
     if len(params) != len(types):
@@ -110,7 +110,7 @@ def encode_params(params: list, types: list[str]) -> bytes:
             raise ValueError(f"Unknown param type: {typ}")
         encoded = encoder(val)
         result.extend(encoded)
-        if typ in ('string', 'bytes'):
+        if typ == 'string':
             result.append(0x00)  # null terminator
     return bytes(result)
 
@@ -194,6 +194,21 @@ class CodonEncoder:
         return b''.join(
             self.encode(s, o, t, p, r)
             for (s, o, t, p, r) in calls
+        )
+
+    def encode_envelope(self, service_id: int, op_id: int, template_id: int,
+                        params: Optional[list] = None, is_response: bool = False,
+                        *, deadline_ms: int = 0, request_id: Optional[bytes] = None,
+                        flags: int = 0):
+        """Encode one codon in a strict v0.3 call envelope.
+
+        The legacy ``encode`` API remains available for existing packet users.
+        """
+        from ana.envelope import CallEnvelope
+        codon = self.encode(service_id, op_id, template_id, params, is_response)
+        return CallEnvelope.for_codebook(
+            self.codebook, codon, deadline_ms=deadline_ms,
+            request_id=request_id, flags=flags,
         )
 
     def make_noise(self, count: int = 1) -> bytes:
@@ -327,6 +342,16 @@ class CodonDecoder:
                 })
                 break
         return results
+
+    def decode_envelope(self, envelope_bytes: bytes) -> tuple[dict, object]:
+        """Verify an envelope's codebook binding, then decode its one codon."""
+        from ana.envelope import CallEnvelope
+        envelope = CallEnvelope.deserialize(envelope_bytes)
+        envelope.verify_codebook(self.codebook)
+        decoded, offset = self.decode(envelope.codon)
+        if offset != len(envelope.codon):
+            raise ValueError("envelope contains trailing codon data")
+        return decoded, envelope
 
     @staticmethod
     def is_noise(codon_bytes: bytes, offset: int = 0) -> bool:
