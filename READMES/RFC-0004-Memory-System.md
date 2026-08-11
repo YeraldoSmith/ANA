@@ -50,7 +50,7 @@ Future implementations SHOULD add provenance, generator/model version, confidenc
 
 ### 3.1 Raw Memory
 
-Raw Memory consists of original conversations, file snippets, tool outputs, or event records. It is suitable for traceability and error correction and SHOULD NOT be re-sent in full to the model by default. Raw Memory typically contains significant privacy and context and MUST be strictly controlled by local policy.
+Raw Memory consists of original conversations, file snippets, tool outputs, or event records. It is suitable for traceability and error correction and SHOULD NOT be re-sent in full to the model by default. Raw Memory typically contains significant privacy and context and SHOULD be strictly controlled by local policy.
 
 ### 3.2 Structured Memory
 

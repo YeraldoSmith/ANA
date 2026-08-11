@@ -30,7 +30,7 @@ The key words "MUST", "MUST NOT", "SHOULD", and "MAY" in this document describe 
 ANA v0.1 aims for the following:
 
 1. **Local state sovereignty**: The Local Agent is the final arbiter of user state, authorization, and policy.
-2. **Separation of model and memory**: Model weights, context caches, and user long-term Memory are distinct objects and MUST NOT be forcibly coupled.
+2. **Separation of model and memory**: Model weights, context caches, and user long-term Memory are distinct objects and SHOULD NOT be forcibly coupled.
 3. **Capability-oriented interchange**: Upper-layer tasks request capabilities (e.g., `code_generation`) rather than being locked to a specific vendor.
 4. **AI Node communication and synchronization**: Tasks, structured semantics, and State Deltas can be transmitted and recovered between compatible nodes.
 5. **Least privilege**: Only the minimum context and permissions required to complete the current task are provided to the Provider.
