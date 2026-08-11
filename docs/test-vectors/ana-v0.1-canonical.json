@@ -1,0 +1,9 @@
+{
+  "cases": [
+    {
+      "id": "unicode-code-point-key-order",
+      "input": {"😀": "supplementary", "": "bmp", "a": "ascii"},
+      "expected_canonical": "{\"a\":\"ascii\",\"\":\"bmp\",\"😀\":\"supplementary\"}"
+    }
+  ]
+}

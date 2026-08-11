@@ -1,0 +1,228 @@
+{
+  "phase": "phase-6-cross-provider-continuity",
+  "migrations": [
+    {
+      "mode": "offline_contract_validation",
+      "migration": "openai-contract -> anthropic-contract",
+      "provider_a": "openai-contract",
+      "provider_b": "anthropic-contract",
+      "initial_state": {
+        "phase": "scaffolded",
+        "sequence": 4,
+        "last_event_id": "evt-4-scaffold",
+        "completed_tasks": [
+          "create_basic_structure"
+        ],
+        "files": [
+          "src/main/java/ana/App.java"
+        ]
+      },
+      "state_after_provider_a": {
+        "phase": "implementation",
+        "sequence": 5,
+        "last_event_id": "evt-5-validate-scaffold",
+        "completed_tasks": [
+          "create_basic_structure",
+          "validate_scaffold"
+        ],
+        "files": [
+          "src/main/java/ana/App.java"
+        ]
+      },
+      "state_diff": {
+        "phase": [
+          "scaffolded",
+          "implementation"
+        ],
+        "sequence": [
+          4,
+          5
+        ],
+        "completed_tasks_added": [
+          "validate_scaffold"
+        ]
+      },
+      "provider_b_received": {
+        "memory": [
+          {
+            "id": "mem-project-java",
+            "kind": "semantic",
+            "content": {
+              "language": "java",
+              "project": "ANA"
+            }
+          },
+          {
+            "id": "pref-security",
+            "kind": "preference",
+            "content": {
+              "priority": "security_first"
+            }
+          },
+          {
+            "id": "mem-local-owner",
+            "kind": "semantic",
+            "content": {
+              "memory_owner": "local_runtime"
+            }
+          }
+        ],
+        "project_state": {
+          "phase": "implementation",
+          "sequence": 5,
+          "last_event_id": "evt-5-validate-scaffold",
+          "completed_tasks": [
+            "create_basic_structure",
+            "validate_scaffold"
+          ],
+          "files": [
+            "src/main/java/ana/App.java"
+          ]
+        },
+        "policy": {
+          "execution_mode": "sandbox_first",
+          "priority": "security_first"
+        }
+      },
+      "continuity_assertions": {
+        "preference_retained": true,
+        "project_phase_continuous": true,
+        "completed_task_not_repeated": true,
+        "latest_state_overrides_old_state": true,
+        "no_provider_a_history_sent_to_b": true,
+        "provider_memory_is_neutral": true,
+        "safety_policy_retained": true
+      }
+    },
+    {
+      "mode": "offline_contract_validation",
+      "migration": "anthropic-contract -> openai-contract",
+      "provider_a": "anthropic-contract",
+      "provider_b": "openai-contract",
+      "initial_state": {
+        "phase": "scaffolded",
+        "sequence": 4,
+        "last_event_id": "evt-4-scaffold",
+        "completed_tasks": [
+          "create_basic_structure"
+        ],
+        "files": [
+          "src/main/java/ana/App.java"
+        ]
+      },
+      "state_after_provider_a": {
+        "phase": "implementation",
+        "sequence": 5,
+        "last_event_id": "evt-5-validate-scaffold",
+        "completed_tasks": [
+          "create_basic_structure",
+          "validate_scaffold"
+        ],
+        "files": [
+          "src/main/java/ana/App.java"
+        ]
+      },
+      "state_diff": {
+        "phase": [
+          "scaffolded",
+          "implementation"
+        ],
+        "sequence": [
+          4,
+          5
+        ],
+        "completed_tasks_added": [
+          "validate_scaffold"
+        ]
+      },
+      "provider_b_received": {
+        "memory": [
+          {
+            "id": "mem-project-java",
+            "kind": "semantic",
+            "content": {
+              "language": "java",
+              "project": "ANA"
+            }
+          },
+          {
+            "id": "pref-security",
+            "kind": "preference",
+            "content": {
+              "priority": "security_first"
+            }
+          },
+          {
+            "id": "mem-local-owner",
+            "kind": "semantic",
+            "content": {
+              "memory_owner": "local_runtime"
+            }
+          }
+        ],
+        "project_state": {
+          "phase": "implementation",
+          "sequence": 5,
+          "last_event_id": "evt-5-validate-scaffold",
+          "completed_tasks": [
+            "create_basic_structure",
+            "validate_scaffold"
+          ],
+          "files": [
+            "src/main/java/ana/App.java"
+          ]
+        },
+        "policy": {
+          "execution_mode": "sandbox_first",
+          "priority": "security_first"
+        }
+      },
+      "continuity_assertions": {
+        "preference_retained": true,
+        "project_phase_continuous": true,
+        "completed_task_not_repeated": true,
+        "latest_state_overrides_old_state": true,
+        "no_provider_a_history_sent_to_b": true,
+        "provider_memory_is_neutral": true,
+        "safety_policy_retained": true
+      }
+    }
+  ],
+  "failure_cases": [
+    {
+      "case": "conflicting_state",
+      "accepted": false,
+      "detected": "state_conflicts_with_current_project",
+      "expected": "state_conflicts_with_current_project",
+      "local_state_unchanged": true
+    },
+    {
+      "case": "ignore_preference",
+      "accepted": false,
+      "detected": "preference_not_preserved",
+      "expected": "preference_not_preserved",
+      "local_state_unchanged": true
+    },
+    {
+      "case": "unsafe_action",
+      "accepted": false,
+      "detected": "unsafe_action_denied_by_local_policy",
+      "expected": "unsafe_action_denied_by_local_policy",
+      "local_state_unchanged": true
+    },
+    {
+      "case": "sequence_rollback",
+      "accepted": false,
+      "detected": "state_sequence_not_monotonic",
+      "expected": "state_sequence_not_monotonic",
+      "local_state_unchanged": true
+    },
+    {
+      "case": "stale_memory",
+      "accepted": false,
+      "detected": "stale_or_unselected_memory_referenced",
+      "expected": "stale_or_unselected_memory_referenced",
+      "local_state_unchanged": true
+    }
+  ]
+}

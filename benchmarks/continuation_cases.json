@@ -1,0 +1,21 @@
+[
+  {
+    "case_id": "java-security-continuation",
+    "request": "Continue the implementation using the remembered constraints.",
+    "baseline_history": [
+      "User: We are building ANA as an AI communication standard.",
+      "Assistant: I will use a Java hello-world example for the first MVP. language=java.",
+      "User: My main priority is security; do not let model output execute directly. priority=security_first.",
+      "Assistant: The local runtime will own policy and execution.",
+      "User: Keep memory independent from the cloud model.",
+      "Assistant: I will retain that as a semantic design constraint. memory_owner=local_runtime.",
+      "User: Continue the implementation using the remembered constraints."
+    ],
+    "ana_memory": [
+      {"kind": "preference", "content": {"language": "java"}},
+      {"kind": "semantic", "content": {"priority": "security_first"}},
+      {"kind": "semantic", "content": {"memory_owner": "local_runtime"}}
+    ],
+    "required_facts": ["java", "security_first", "local_runtime"]
+  }
+]

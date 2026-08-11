@@ -1,0 +1,5 @@
+{
+  "scales": [1, 5, 10, 25, 50, 100],
+  "task": "Continue the ANA project using the supplied context.",
+  "stable_facts": ["ANA", "security_first", "local_runtime"]
+}

@@ -1,0 +1,270 @@
+{
+  "phase": "phase-5-ablation-and-fair-baseline",
+  "continuation": [
+    {
+      "turn": 1,
+      "naive": {
+        "utf8_bytes": 248,
+        "token_estimate": 60,
+        "token_method": "cl100k_base_estimate",
+        "encode_decode_mean_us": 2.409,
+        "required_fact_retention": "7/7"
+      },
+      "smart": {
+        "utf8_bytes": 589,
+        "token_estimate": 131,
+        "token_method": "cl100k_base_estimate",
+        "encode_decode_mean_us": 7.091,
+        "required_fact_retention": "7/7"
+      },
+      "ana": {
+        "utf8_bytes": 713,
+        "token_estimate": 163,
+        "token_method": "cl100k_base_estimate",
+        "encode_decode_mean_us": 8.633,
+        "required_fact_retention": "7/7"
+      }
+    },
+    {
+      "turn": 2,
+      "naive": {
+        "utf8_bytes": 421,
+        "token_estimate": 103,
+        "token_method": "cl100k_base_estimate",
+        "encode_decode_mean_us": 2.941,
+        "required_fact_retention": "7/7"
+      },
+      "smart": {
+        "utf8_bytes": 585,
+        "token_estimate": 132,
+        "token_method": "cl100k_base_estimate",
+        "encode_decode_mean_us": 7.104,
+        "required_fact_retention": "7/7"
+      },
+      "ana": {
+        "utf8_bytes": 709,
+        "token_estimate": 164,
+        "token_method": "cl100k_base_estimate",
+        "encode_decode_mean_us": 8.39,
+        "required_fact_retention": "7/7"
+      }
+    },
+    {
+      "turn": 5,
+      "naive": {
+        "utf8_bytes": 940,
+        "token_estimate": 232,
+        "token_method": "cl100k_base_estimate",
+        "encode_decode_mean_us": 4.637,
+        "required_fact_retention": "7/7"
+      },
+      "smart": {
+        "utf8_bytes": 585,
+        "token_estimate": 132,
+        "token_method": "cl100k_base_estimate",
+        "encode_decode_mean_us": 7.145,
+        "required_fact_retention": "7/7"
+      },
+      "ana": {
+        "utf8_bytes": 709,
+        "token_estimate": 164,
+        "token_method": "cl100k_base_estimate",
+        "encode_decode_mean_us": 8.17,
+        "required_fact_retention": "7/7"
+      }
+    },
+    {
+      "turn": 10,
+      "naive": {
+        "utf8_bytes": 1807,
+        "token_estimate": 447,
+        "token_method": "cl100k_base_estimate",
+        "encode_decode_mean_us": 7.381,
+        "required_fact_retention": "7/7"
+      },
+      "smart": {
+        "utf8_bytes": 589,
+        "token_estimate": 132,
+        "token_method": "cl100k_base_estimate",
+        "encode_decode_mean_us": 7.204,
+        "required_fact_retention": "7/7"
+      },
+      "ana": {
+        "utf8_bytes": 714,
+        "token_estimate": 164,
+        "token_method": "cl100k_base_estimate",
+        "encode_decode_mean_us": 8.11,
+        "required_fact_retention": "7/7"
+      }
+    },
+    {
+      "turn": 25,
+      "naive": {
+        "utf8_bytes": 4432,
+        "token_estimate": 1092,
+        "token_method": "cl100k_base_estimate",
+        "encode_decode_mean_us": 15.061,
+        "required_fact_retention": "7/7"
+      },
+      "smart": {
+        "utf8_bytes": 590,
+        "token_estimate": 132,
+        "token_method": "cl100k_base_estimate",
+        "encode_decode_mean_us": 7.245,
+        "required_fact_retention": "7/7"
+      },
+      "ana": {
+        "utf8_bytes": 715,
+        "token_estimate": 164,
+        "token_method": "cl100k_base_estimate",
+        "encode_decode_mean_us": 8.161,
+        "required_fact_retention": "7/7"
+      }
+    },
+    {
+      "turn": 50,
+      "naive": {
+        "utf8_bytes": 8807,
+        "token_estimate": 2167,
+        "token_method": "cl100k_base_estimate",
+        "encode_decode_mean_us": 27.648,
+        "required_fact_retention": "7/7"
+      },
+      "smart": {
+        "utf8_bytes": 590,
+        "token_estimate": 132,
+        "token_method": "cl100k_base_estimate",
+        "encode_decode_mean_us": 7.202,
+        "required_fact_retention": "7/7"
+      },
+      "ana": {
+        "utf8_bytes": 715,
+        "token_estimate": 164,
+        "token_method": "cl100k_base_estimate",
+        "encode_decode_mean_us": 7.922,
+        "required_fact_retention": "7/7"
+      }
+    },
+    {
+      "turn": 100,
+      "naive": {
+        "utf8_bytes": 17559,
+        "token_estimate": 4317,
+        "token_method": "cl100k_base_estimate",
+        "encode_decode_mean_us": 51.566,
+        "required_fact_retention": "7/7"
+      },
+      "smart": {
+        "utf8_bytes": 594,
+        "token_estimate": 132,
+        "token_method": "cl100k_base_estimate",
+        "encode_decode_mean_us": 7.078,
+        "required_fact_retention": "7/7"
+      },
+      "ana": {
+        "utf8_bytes": 720,
+        "token_estimate": 164,
+        "token_method": "cl100k_base_estimate",
+        "encode_decode_mean_us": 7.91,
+        "required_fact_retention": "7/7"
+      }
+    }
+  ],
+  "envelope_ablations": [
+    {
+      "turn": 1,
+      "full_envelope_bytes": 713,
+      "version_bytes": 16,
+      "metadata_bytes": 99,
+      "identifiers_bytes": 95,
+      "state_fields_bytes": 60,
+      "causality_information_bytes": 62
+    },
+    {
+      "turn": 2,
+      "full_envelope_bytes": 709,
+      "version_bytes": 16,
+      "metadata_bytes": 99,
+      "identifiers_bytes": 95,
+      "state_fields_bytes": 60,
+      "causality_information_bytes": 58
+    },
+    {
+      "turn": 5,
+      "full_envelope_bytes": 709,
+      "version_bytes": 16,
+      "metadata_bytes": 99,
+      "identifiers_bytes": 95,
+      "state_fields_bytes": 60,
+      "causality_information_bytes": 58
+    },
+    {
+      "turn": 10,
+      "full_envelope_bytes": 714,
+      "version_bytes": 16,
+      "metadata_bytes": 99,
+      "identifiers_bytes": 96,
+      "state_fields_bytes": 61,
+      "causality_information_bytes": 60
+    },
+    {
+      "turn": 25,
+      "full_envelope_bytes": 715,
+      "version_bytes": 16,
+      "metadata_bytes": 99,
+      "identifiers_bytes": 96,
+      "state_fields_bytes": 61,
+      "causality_information_bytes": 61
+    },
+    {
+      "turn": 50,
+      "full_envelope_bytes": 715,
+      "version_bytes": 16,
+      "metadata_bytes": 99,
+      "identifiers_bytes": 96,
+      "state_fields_bytes": 61,
+      "causality_information_bytes": 61
+    },
+    {
+      "turn": 100,
+      "full_envelope_bytes": 720,
+      "version_bytes": 16,
+      "metadata_bytes": 99,
+      "identifiers_bytes": 97,
+      "state_fields_bytes": 62,
+      "causality_information_bytes": 63
+    }
+  ],
+  "memory_fidelity": [
+    {
+      "case_id": "old-important-fact",
+      "expected_present_retention": "1/1",
+      "expected_obsolete_or_conflicting_absence": "1/1",
+      "selection_fidelity": true
+    },
+    {
+      "case_id": "preference-change",
+      "expected_present_retention": "1/1",
+      "expected_obsolete_or_conflicting_absence": "1/1",
+      "selection_fidelity": true
+    },
+    {
+      "case_id": "project-state-update",
+      "expected_present_retention": "1/1",
+      "expected_obsolete_or_conflicting_absence": "1/1",
+      "selection_fidelity": true
+    },
+    {
+      "case_id": "conflicting-facts",
+      "expected_present_retention": "1/1",
+      "expected_obsolete_or_conflicting_absence": "1/1",
+      "selection_fidelity": true
+    },
+    {
+      "case_id": "time-related-state",
+      "expected_present_retention": "1/1",
+      "expected_obsolete_or_conflicting_absence": "1/1",
+      "selection_fidelity": true
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "scales": [1, 2, 5, 10, 25, 50, 100],
+  "task": "Continue the ANA project using the selected context.",
+  "selected_memory": [
+    {"kind": "semantic", "content": {"project": "ANA", "memory_owner": "local_runtime"}},
+    {"kind": "semantic", "content": {"priority": "security_first"}},
+    {"kind": "preference", "content": {"language": "english"}}
+  ]
+}
