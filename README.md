@@ -2,6 +2,8 @@
 
 > **Status: ANA v0.1 Draft / Experimental.** Not a production standard, finalized standard, or security-audited protocol.
 
+English | [简体中文](README.zh-CN.md)
+
 **ANA is a local-first state and interoperability protocol for replaceable AI models.**
 
 It defines a small, testable boundary in which a user-controlled Local Runtime
