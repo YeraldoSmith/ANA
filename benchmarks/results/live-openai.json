@@ -1,0 +1,6 @@
+{
+  "experiment": "live-provider-validation",
+  "provider": "openai.responses",
+  "status": "skipped_missing_openai_api_key",
+  "request_count": 0
+}

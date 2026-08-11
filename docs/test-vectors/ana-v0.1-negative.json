@@ -1,0 +1,47 @@
+{
+  "base_case_id": "ana-v0.1-minimal-001",
+  "cases": [
+    {
+      "id": "unknown-protocol-version",
+      "target": "frame",
+      "patch": {"protocol_version": "9.9"},
+      "expected_java_error": "unsupported_profile"
+    },
+    {
+      "id": "malformed-envelope-input",
+      "target": "envelope",
+      "patch": {"input": "not-an-object"},
+      "expected_java_error": "invalid_envelope"
+    },
+    {
+      "id": "invalid-state-delta-sequence",
+      "target": "state_delta",
+      "patch": {"sequence": 0},
+      "expected_java_error": "invalid_sequence"
+    },
+    {
+      "id": "mismatched-frame-and-state-delta-sequence",
+      "target": "state_frame",
+      "patch": {"sequence": 2},
+      "expected_java_error": "invalid_sequence"
+    },
+    {
+      "id": "broken-state-delta-causality",
+      "target": "state_delta",
+      "patch": {"parent_event_id": "msg-not-the-task"},
+      "expected_java_error": "broken_causality"
+    },
+    {
+      "id": "unknown-required-payload-semantics",
+      "target": "frame",
+      "patch": {"payload_type": "unknown-required-event"},
+      "expected_java_error": "unknown_required_semantics"
+    },
+    {
+      "id": "invalid-state-delta-kind",
+      "target": "state_delta",
+      "patch": {"kind": "unknown.required.kind"},
+      "expected_java_error": "invalid_state_delta"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "case_id": "ana-v0.1-memory-state-import-001",
+  "memory_records": [
+    {
+      "id": "mem-java-project",
+      "kind": "semantic",
+      "content": {"language": "java", "project": "ANA"},
+      "portability": "portable",
+      "created_at": "2026-08-11T00:00:00+00:00"
+    },
+    {
+      "id": "mem-security-preference",
+      "kind": "preference",
+      "content": {"priority": "security_first"},
+      "portability": "portable",
+      "created_at": "2026-08-11T00:01:00+00:00"
+    }
+  ],
+  "project_state": {
+    "phase": "implementation",
+    "completed_tasks": ["create_basic_structure", "validate_scaffold"],
+    "sequence": 5
+  },
+  "policy": {"execution_mode": "sandbox_first", "secret_disclosure": "deny"}
+}

@@ -1,0 +1,37 @@
+{
+  "case_id": "ana-v0.1-minimal-001",
+  "envelope": {
+    "version": "0.1",
+    "task_id": "task-phase1-0001",
+    "intent": "generate",
+    "capabilities": ["code_generation"],
+    "input": {"text": "Generate Java Hello World"},
+    "context": {"language": "java"},
+    "memory_refs": ["mem-preference-security"],
+    "policy": {"execution_mode": "sandbox_first"}
+  },
+  "envelope_frame": {
+    "message_id": "msg-task-phase1-0001",
+    "stream_id": "task-phase1-0001",
+    "sequence": 0
+  },
+  "expected_envelope_payload": "{\"capabilities\":[\"code_generation\"],\"context\":{\"language\":\"java\"},\"input\":{\"text\":\"Generate Java Hello World\"},\"intent\":\"generate\",\"memory_refs\":[\"mem-preference-security\"],\"policy\":{\"execution_mode\":\"sandbox_first\"},\"task_id\":\"task-phase1-0001\",\"version\":\"0.1\"}",
+  "expected_state_delta": {
+    "event_id": "evt-task-phase1-0001-project-state",
+    "stream_id": "task-phase1-0001",
+    "parent_event_id": "msg-task-phase1-0001",
+    "sequence": 1,
+    "kind": "project_state.upsert",
+    "payload": {
+      "task_id": "task-phase1-0001",
+      "status": "routed",
+      "required_capabilities": ["code_generation"]
+    }
+  },
+  "state_delta_frame": {
+    "message_id": "msg-state-phase1-0001",
+    "stream_id": "task-phase1-0001",
+    "sequence": 1
+  },
+  "expected_state_delta_payload": "{\"event_id\":\"evt-task-phase1-0001-project-state\",\"kind\":\"project_state.upsert\",\"parent_event_id\":\"msg-task-phase1-0001\",\"payload\":{\"required_capabilities\":[\"code_generation\"],\"status\":\"routed\",\"task_id\":\"task-phase1-0001\"},\"sequence\":1,\"stream_id\":\"task-phase1-0001\"}"
+}

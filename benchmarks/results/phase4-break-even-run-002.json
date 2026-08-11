@@ -1,0 +1,554 @@
+{
+  "phase": "phase-4-break-even-analysis",
+  "decomposition": [
+    {
+      "case_id": "simple-001",
+      "category": "simple_task",
+      "baseline": {
+        "total_bytes": 130,
+        "protocol_envelope_fixed_bytes": 24,
+        "task_content_bytes": 33,
+        "repeated_context_bytes": 68,
+        "metadata_bytes": 5
+      },
+      "ana": {
+        "total_bytes": 148,
+        "protocol_envelope_fixed_bytes": 60,
+        "task_content_bytes": 33,
+        "memory_bytes": 12,
+        "preference_bytes": 0,
+        "project_state_bytes": 0,
+        "state_delta_bytes": 0,
+        "metadata_bytes": 43
+      }
+    },
+    {
+      "case_id": "simple-002",
+      "category": "simple_task",
+      "baseline": {
+        "total_bytes": 120,
+        "protocol_envelope_fixed_bytes": 24,
+        "task_content_bytes": 30,
+        "repeated_context_bytes": 61,
+        "metadata_bytes": 5
+      },
+      "ana": {
+        "total_bytes": 143,
+        "protocol_envelope_fixed_bytes": 60,
+        "task_content_bytes": 30,
+        "memory_bytes": 0,
+        "preference_bytes": 8,
+        "project_state_bytes": 0,
+        "state_delta_bytes": 0,
+        "metadata_bytes": 45
+      }
+    },
+    {
+      "case_id": "code-001",
+      "category": "code_generation_modification",
+      "baseline": {
+        "total_bytes": 232,
+        "protocol_envelope_fixed_bytes": 24,
+        "task_content_bytes": 54,
+        "repeated_context_bytes": 143,
+        "metadata_bytes": 11
+      },
+      "ana": {
+        "total_bytes": 253,
+        "protocol_envelope_fixed_bytes": 60,
+        "task_content_bytes": 54,
+        "memory_bytes": 14,
+        "preference_bytes": 4,
+        "project_state_bytes": 10,
+        "state_delta_bytes": 0,
+        "metadata_bytes": 111
+      }
+    },
+    {
+      "case_id": "code-002",
+      "category": "code_generation_modification",
+      "baseline": {
+        "total_bytes": 218,
+        "protocol_envelope_fixed_bytes": 24,
+        "task_content_bytes": 45,
+        "repeated_context_bytes": 138,
+        "metadata_bytes": 11
+      },
+      "ana": {
+        "total_bytes": 264,
+        "protocol_envelope_fixed_bytes": 60,
+        "task_content_bytes": 45,
+        "memory_bytes": 24,
+        "preference_bytes": 6,
+        "project_state_bytes": 9,
+        "state_delta_bytes": 0,
+        "metadata_bytes": 120
+      }
+    },
+    {
+      "case_id": "continuation-001",
+      "category": "long_context_continuation",
+      "baseline": {
+        "total_bytes": 499,
+        "protocol_envelope_fixed_bytes": 24,
+        "task_content_bytes": 59,
+        "repeated_context_bytes": 387,
+        "metadata_bytes": 29
+      },
+      "ana": {
+        "total_bytes": 437,
+        "protocol_envelope_fixed_bytes": 60,
+        "task_content_bytes": 59,
+        "memory_bytes": 59,
+        "preference_bytes": 0,
+        "project_state_bytes": 39,
+        "state_delta_bytes": 0,
+        "metadata_bytes": 220
+      }
+    },
+    {
+      "case_id": "continuation-002",
+      "category": "long_context_continuation",
+      "baseline": {
+        "total_bytes": 423,
+        "protocol_envelope_fixed_bytes": 24,
+        "task_content_bytes": 63,
+        "repeated_context_bytes": 307,
+        "metadata_bytes": 29
+      },
+      "ana": {
+        "total_bytes": 449,
+        "protocol_envelope_fixed_bytes": 60,
+        "task_content_bytes": 63,
+        "memory_bytes": 39,
+        "preference_bytes": 0,
+        "project_state_bytes": 68,
+        "state_delta_bytes": 0,
+        "metadata_bytes": 219
+      }
+    },
+    {
+      "case_id": "preference-001",
+      "category": "user_preference",
+      "baseline": {
+        "total_bytes": 212,
+        "protocol_envelope_fixed_bytes": 24,
+        "task_content_bytes": 39,
+        "repeated_context_bytes": 138,
+        "metadata_bytes": 11
+      },
+      "ana": {
+        "total_bytes": 217,
+        "protocol_envelope_fixed_bytes": 60,
+        "task_content_bytes": 39,
+        "memory_bytes": 0,
+        "preference_bytes": 29,
+        "project_state_bytes": 0,
+        "state_delta_bytes": 0,
+        "metadata_bytes": 89
+      }
+    },
+    {
+      "case_id": "preference-002",
+      "category": "user_preference",
+      "baseline": {
+        "total_bytes": 202,
+        "protocol_envelope_fixed_bytes": 24,
+        "task_content_bytes": 38,
+        "repeated_context_bytes": 129,
+        "metadata_bytes": 11
+      },
+      "ana": {
+        "total_bytes": 208,
+        "protocol_envelope_fixed_bytes": 60,
+        "task_content_bytes": 38,
+        "memory_bytes": 0,
+        "preference_bytes": 21,
+        "project_state_bytes": 0,
+        "state_delta_bytes": 0,
+        "metadata_bytes": 89
+      }
+    },
+    {
+      "case_id": "project-001",
+      "category": "project_state",
+      "baseline": {
+        "total_bytes": 191,
+        "protocol_envelope_fixed_bytes": 24,
+        "task_content_bytes": 29,
+        "repeated_context_bytes": 124,
+        "metadata_bytes": 14
+      },
+      "ana": {
+        "total_bytes": 221,
+        "protocol_envelope_fixed_bytes": 60,
+        "task_content_bytes": 29,
+        "memory_bytes": 3,
+        "preference_bytes": 0,
+        "project_state_bytes": 33,
+        "state_delta_bytes": 0,
+        "metadata_bytes": 96
+      }
+    },
+    {
+      "case_id": "project-002",
+      "category": "project_state",
+      "baseline": {
+        "total_bytes": 195,
+        "protocol_envelope_fixed_bytes": 24,
+        "task_content_bytes": 26,
+        "repeated_context_bytes": 131,
+        "metadata_bytes": 14
+      },
+      "ana": {
+        "total_bytes": 220,
+        "protocol_envelope_fixed_bytes": 60,
+        "task_content_bytes": 26,
+        "memory_bytes": 3,
+        "preference_bytes": 0,
+        "project_state_bytes": 39,
+        "state_delta_bytes": 0,
+        "metadata_bytes": 92
+      }
+    },
+    {
+      "case_id": "delta-001",
+      "category": "state_delta",
+      "baseline": {
+        "total_bytes": 217,
+        "protocol_envelope_fixed_bytes": 24,
+        "task_content_bytes": 31,
+        "repeated_context_bytes": 145,
+        "metadata_bytes": 17
+      },
+      "ana": {
+        "total_bytes": 200,
+        "protocol_envelope_fixed_bytes": 60,
+        "task_content_bytes": 31,
+        "memory_bytes": 0,
+        "preference_bytes": 0,
+        "project_state_bytes": 0,
+        "state_delta_bytes": 40,
+        "metadata_bytes": 69
+      }
+    },
+    {
+      "case_id": "delta-002",
+      "category": "state_delta",
+      "baseline": {
+        "total_bytes": 240,
+        "protocol_envelope_fixed_bytes": 24,
+        "task_content_bytes": 32,
+        "repeated_context_bytes": 167,
+        "metadata_bytes": 17
+      },
+      "ana": {
+        "total_bytes": 224,
+        "protocol_envelope_fixed_bytes": 60,
+        "task_content_bytes": 32,
+        "memory_bytes": 0,
+        "preference_bytes": 0,
+        "project_state_bytes": 0,
+        "state_delta_bytes": 63,
+        "metadata_bytes": 69
+      }
+    }
+  ],
+  "parameterized_curves": [
+    {
+      "dimension": "conversation_history",
+      "points": [
+        {
+          "scale": 1,
+          "baseline_bytes": 174,
+          "ana_bytes": 241,
+          "baseline_tokens": 42,
+          "ana_tokens": 53,
+          "token_method": "cl100k_base_estimate"
+        },
+        {
+          "scale": 5,
+          "baseline_bytes": 478,
+          "ana_bytes": 241,
+          "baseline_tokens": 118,
+          "ana_tokens": 53,
+          "token_method": "cl100k_base_estimate"
+        },
+        {
+          "scale": 10,
+          "baseline_bytes": 860,
+          "ana_bytes": 242,
+          "baseline_tokens": 213,
+          "ana_tokens": 53,
+          "token_method": "cl100k_base_estimate"
+        },
+        {
+          "scale": 25,
+          "baseline_bytes": 2015,
+          "ana_bytes": 242,
+          "baseline_tokens": 498,
+          "ana_tokens": 53,
+          "token_method": "cl100k_base_estimate"
+        },
+        {
+          "scale": 50,
+          "baseline_bytes": 3940,
+          "ana_bytes": 242,
+          "baseline_tokens": 973,
+          "ana_tokens": 53,
+          "token_method": "cl100k_base_estimate"
+        },
+        {
+          "scale": 100,
+          "baseline_bytes": 7792,
+          "ana_bytes": 243,
+          "baseline_tokens": 1923,
+          "ana_tokens": 53,
+          "token_method": "cl100k_base_estimate"
+        }
+      ],
+      "break_even_search_range": [
+        1,
+        100
+      ],
+      "break_even_bytes": 2,
+      "break_even_tokens": 2
+    },
+    {
+      "dimension": "project_state",
+      "points": [
+        {
+          "scale": 1,
+          "baseline_bytes": 94,
+          "ana_bytes": 133,
+          "baseline_tokens": 24,
+          "ana_tokens": 34,
+          "token_method": "cl100k_base_estimate"
+        },
+        {
+          "scale": 5,
+          "baseline_bytes": 170,
+          "ana_bytes": 221,
+          "baseline_tokens": 52,
+          "ana_tokens": 66,
+          "token_method": "cl100k_base_estimate"
+        },
+        {
+          "scale": 10,
+          "baseline_bytes": 267,
+          "ana_bytes": 333,
+          "baseline_tokens": 87,
+          "ana_tokens": 106,
+          "token_method": "cl100k_base_estimate"
+        },
+        {
+          "scale": 25,
+          "baseline_bytes": 582,
+          "ana_bytes": 693,
+          "baseline_tokens": 192,
+          "ana_tokens": 226,
+          "token_method": "cl100k_base_estimate"
+        },
+        {
+          "scale": 50,
+          "baseline_bytes": 1107,
+          "ana_bytes": 1293,
+          "baseline_tokens": 367,
+          "ana_tokens": 426,
+          "token_method": "cl100k_base_estimate"
+        },
+        {
+          "scale": 100,
+          "baseline_bytes": 2159,
+          "ana_bytes": 2495,
+          "baseline_tokens": 717,
+          "ana_tokens": 826,
+          "token_method": "cl100k_base_estimate"
+        }
+      ],
+      "break_even_search_range": [
+        1,
+        100
+      ],
+      "break_even_bytes": null,
+      "break_even_tokens": null
+    },
+    {
+      "dimension": "user_preferences",
+      "points": [
+        {
+          "scale": 1,
+          "baseline_bytes": 99,
+          "ana_bytes": 170,
+          "baseline_tokens": 25,
+          "ana_tokens": 42,
+          "token_method": "cl100k_base_estimate"
+        },
+        {
+          "scale": 5,
+          "baseline_bytes": 195,
+          "ana_bytes": 406,
+          "baseline_tokens": 57,
+          "ana_tokens": 106,
+          "token_method": "cl100k_base_estimate"
+        },
+        {
+          "scale": 10,
+          "baseline_bytes": 317,
+          "ana_bytes": 703,
+          "baseline_tokens": 97,
+          "ana_tokens": 186,
+          "token_method": "cl100k_base_estimate"
+        },
+        {
+          "scale": 25,
+          "baseline_bytes": 707,
+          "ana_bytes": 1618,
+          "baseline_tokens": 217,
+          "ana_tokens": 426,
+          "token_method": "cl100k_base_estimate"
+        },
+        {
+          "scale": 50,
+          "baseline_bytes": 1357,
+          "ana_bytes": 3143,
+          "baseline_tokens": 417,
+          "ana_tokens": 826,
+          "token_method": "cl100k_base_estimate"
+        },
+        {
+          "scale": 100,
+          "baseline_bytes": 2659,
+          "ana_bytes": 6195,
+          "baseline_tokens": 817,
+          "ana_tokens": 1626,
+          "token_method": "cl100k_base_estimate"
+        }
+      ],
+      "break_even_search_range": [
+        1,
+        100
+      ],
+      "break_even_bytes": null,
+      "break_even_tokens": null
+    },
+    {
+      "dimension": "repeated_context",
+      "points": [
+        {
+          "scale": 1,
+          "baseline_bytes": 138,
+          "ana_bytes": 209,
+          "baseline_tokens": 29,
+          "ana_tokens": 44,
+          "token_method": "cl100k_base_estimate"
+        },
+        {
+          "scale": 5,
+          "baseline_bytes": 390,
+          "ana_bytes": 209,
+          "baseline_tokens": 77,
+          "ana_tokens": 44,
+          "token_method": "cl100k_base_estimate"
+        },
+        {
+          "scale": 10,
+          "baseline_bytes": 705,
+          "ana_bytes": 209,
+          "baseline_tokens": 137,
+          "ana_tokens": 44,
+          "token_method": "cl100k_base_estimate"
+        },
+        {
+          "scale": 25,
+          "baseline_bytes": 1650,
+          "ana_bytes": 209,
+          "baseline_tokens": 317,
+          "ana_tokens": 44,
+          "token_method": "cl100k_base_estimate"
+        },
+        {
+          "scale": 50,
+          "baseline_bytes": 3225,
+          "ana_bytes": 209,
+          "baseline_tokens": 617,
+          "ana_tokens": 44,
+          "token_method": "cl100k_base_estimate"
+        },
+        {
+          "scale": 100,
+          "baseline_bytes": 6375,
+          "ana_bytes": 209,
+          "baseline_tokens": 1217,
+          "ana_tokens": 44,
+          "token_method": "cl100k_base_estimate"
+        }
+      ],
+      "break_even_search_range": [
+        1,
+        100
+      ],
+      "break_even_bytes": 3,
+      "break_even_tokens": 3
+    },
+    {
+      "dimension": "continuation_turns",
+      "points": [
+        {
+          "scale": 1,
+          "baseline_bytes": 208,
+          "ana_bytes": 341,
+          "baseline_tokens": 46,
+          "ana_tokens": 74,
+          "token_method": "cl100k_base_estimate"
+        },
+        {
+          "scale": 5,
+          "baseline_bytes": 740,
+          "ana_bytes": 341,
+          "baseline_tokens": 162,
+          "ana_tokens": 74,
+          "token_method": "cl100k_base_estimate"
+        },
+        {
+          "scale": 10,
+          "baseline_bytes": 1407,
+          "ana_bytes": 343,
+          "baseline_tokens": 307,
+          "ana_tokens": 74,
+          "token_method": "cl100k_base_estimate"
+        },
+        {
+          "scale": 25,
+          "baseline_bytes": 3432,
+          "ana_bytes": 343,
+          "baseline_tokens": 742,
+          "ana_tokens": 74,
+          "token_method": "cl100k_base_estimate"
+        },
+        {
+          "scale": 50,
+          "baseline_bytes": 6807,
+          "ana_bytes": 343,
+          "baseline_tokens": 1467,
+          "ana_tokens": 74,
+          "token_method": "cl100k_base_estimate"
+        },
+        {
+          "scale": 100,
+          "baseline_bytes": 13559,
+          "ana_bytes": 345,
+          "baseline_tokens": 2917,
+          "ana_tokens": 74,
+          "token_method": "cl100k_base_estimate"
+        }
+      ],
+      "break_even_search_range": [
+        1,
+        100
+      ],
+      "break_even_bytes": 3,
+      "break_even_tokens": 2
+    }
+  ]
+}

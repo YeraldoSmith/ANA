@@ -1,0 +1,42 @@
+[
+  {
+    "case_id": "old-important-fact",
+    "question": "Who owns ANA user state?",
+    "records": [{"id": "mem-core", "timestamp": "2026-01-01", "content": {"owner": "local_runtime"}}, {"id": "mem-noise", "timestamp": "2026-02-01", "content": {"note": "temporary discussion"}}],
+    "selected_ids": ["mem-core"],
+    "expected_present": ["local_runtime"],
+    "expected_absent": ["temporary discussion"]
+  },
+  {
+    "case_id": "preference-change",
+    "question": "What explanation style should be used now?",
+    "records": [{"id": "pref-old", "timestamp": "2026-01-01", "content": {"explanation_style": "concise"}}, {"id": "pref-new", "timestamp": "2026-08-01", "content": {"explanation_style": "detailed"}}],
+    "selected_ids": ["pref-new"],
+    "expected_present": ["detailed"],
+    "expected_absent": ["concise"]
+  },
+  {
+    "case_id": "project-state-update",
+    "question": "What is the current project phase?",
+    "records": [{"id": "project-old", "timestamp": "2026-06-01", "content": {"phase": "phase_3"}}, {"id": "project-new", "timestamp": "2026-08-11", "content": {"phase": "phase_5"}}],
+    "selected_ids": ["project-new"],
+    "expected_present": ["phase_5"],
+    "expected_absent": ["phase_3"]
+  },
+  {
+    "case_id": "conflicting-facts",
+    "question": "Which language is currently selected?",
+    "records": [{"id": "language-old", "timestamp": "2026-05-01", "content": {"language": "java"}}, {"id": "language-new", "timestamp": "2026-08-01", "content": {"language": "python"}}],
+    "selected_ids": ["language-new"],
+    "expected_present": ["python"],
+    "expected_absent": ["java"]
+  },
+  {
+    "case_id": "time-related-state",
+    "question": "What deadline applies now?",
+    "records": [{"id": "deadline-old", "timestamp": "2026-07-01", "content": {"deadline": "2026-08-10"}}, {"id": "deadline-new", "timestamp": "2026-08-11", "content": {"deadline": "2026-08-20"}}],
+    "selected_ids": ["deadline-new"],
+    "expected_present": ["2026-08-20"],
+    "expected_absent": ["2026-08-10"]
+  }
+]

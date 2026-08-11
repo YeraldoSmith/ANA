@@ -1,0 +1,122 @@
+[
+  {
+    "case_id": "simple-001",
+    "category": "simple_task",
+    "task": "Return one sentence saying hello.",
+    "baseline_history": ["User task: Return one sentence saying hello.", "Constraint: one_sentence"],
+    "ana_memory": [{"kind": "semantic", "content": {"format": "one_sentence"}}],
+    "project_state": [],
+    "state_deltas": [],
+    "required_facts": ["one_sentence"]
+  },
+  {
+    "case_id": "simple-002",
+    "category": "simple_task",
+    "task": "Return the answer in Markdown.",
+    "baseline_history": ["User task: Return the answer in Markdown.", "Constraint: markdown"],
+    "ana_memory": [{"kind": "preference", "content": {"format": "markdown"}}],
+    "project_state": [],
+    "state_deltas": [],
+    "required_facts": ["markdown"]
+  },
+  {
+    "case_id": "code-001",
+    "category": "code_generation_modification",
+    "task": "Generate Hello.java using the established constraints.",
+    "baseline_history": ["Project language=java.", "Security priority=security_first.", "Target file=Hello.java.", "User task: Generate Hello.java using the established constraints."],
+    "ana_memory": [{"kind": "preference", "content": {"language": "java"}}, {"kind": "semantic", "content": {"priority": "security_first"}}],
+    "project_state": [{"target_file": "Hello.java"}],
+    "state_deltas": [],
+    "required_facts": ["java", "security_first", "Hello.java"]
+  },
+  {
+    "case_id": "code-002",
+    "category": "code_generation_modification",
+    "task": "Modify parser.py without adding dependencies.",
+    "baseline_history": ["Project language=python.", "Target file=parser.py.", "Constraint=no_external_dependencies.", "User task: Modify parser.py without adding dependencies."],
+    "ana_memory": [{"kind": "preference", "content": {"language": "python"}}, {"kind": "semantic", "content": {"dependency_policy": "no_external_dependencies"}}],
+    "project_state": [{"target_file": "parser.py"}],
+    "state_deltas": [],
+    "required_facts": ["python", "parser.py", "no_external_dependencies"]
+  },
+  {
+    "case_id": "continuation-001",
+    "category": "long_context_continuation",
+    "task": "Continue the ANA implementation with the prior constraints.",
+    "baseline_history": ["Project=ANA.", "Goal=protocol_standard.", "Memory owner=local_runtime.", "Cloud model role=compute_only.", "Security priority=security_first.", "We decided not to implement Codon in this experiment.", "We decided not to implement multi_agent in this experiment.", "The first provider is OpenAI.", "The second provider must use the same_Memory_input.", "User task: Continue the ANA implementation with the prior constraints."],
+    "ana_memory": [{"kind": "semantic", "content": {"project": "ANA", "goal": "protocol_standard"}}, {"kind": "semantic", "content": {"memory_owner": "local_runtime", "cloud_model_role": "compute_only"}}, {"kind": "semantic", "content": {"priority": "security_first"}}],
+    "project_state": [{"excluded_scope": ["Codon", "multi_agent"]}, {"providers": ["OpenAI", "same_Memory_input"]}],
+    "state_deltas": [],
+    "required_facts": ["ANA", "protocol_standard", "local_runtime", "compute_only", "security_first", "Codon", "multi_agent", "OpenAI", "same_Memory_input"]
+  },
+  {
+    "case_id": "continuation-002",
+    "category": "long_context_continuation",
+    "task": "Continue the release preparation without changing the protocol.",
+    "baseline_history": ["Project=ANA.", "Release phase=phase_3.", "RFC version=v0.1.", "Testing status=conformance_passed.", "Safety boundary=provider_no_execute.", "Memory owner=local_runtime.", "Do not add cross_device_sync.", "Do not add complex_chain.", "Benchmark method=fixed_vectors.", "User task: Continue the release preparation without changing the protocol."],
+    "ana_memory": [{"kind": "semantic", "content": {"project": "ANA", "rfc_version": "v0.1"}}, {"kind": "semantic", "content": {"safety_boundary": "provider_no_execute", "memory_owner": "local_runtime"}}],
+    "project_state": [{"release_phase": "phase_3", "testing_status": "conformance_passed", "excluded_scope": ["cross_device_sync", "complex_chain"], "benchmark_method": "fixed_vectors"}],
+    "state_deltas": [],
+    "required_facts": ["ANA", "phase_3", "v0.1", "conformance_passed", "provider_no_execute", "local_runtime", "cross_device_sync", "complex_chain", "fixed_vectors"]
+  },
+  {
+    "case_id": "preference-001",
+    "category": "user_preference",
+    "task": "Explain the current experiment results.",
+    "baseline_history": ["User language=chinese.", "User explanation_style=detailed.", "User risk priority=security_first.", "User task: Explain the current experiment results."],
+    "ana_memory": [{"kind": "preference", "content": {"language": "chinese", "explanation_style": "detailed", "risk_priority": "security_first"}}],
+    "project_state": [],
+    "state_deltas": [],
+    "required_facts": ["chinese", "detailed", "security_first"]
+  },
+  {
+    "case_id": "preference-002",
+    "category": "user_preference",
+    "task": "Summarize the change for a maintainer.",
+    "baseline_history": ["User language=english.", "User explanation_style=concise.", "User output_format=bullets.", "User task: Summarize the change for a maintainer."],
+    "ana_memory": [{"kind": "preference", "content": {"language": "english", "explanation_style": "concise", "output_format": "bullets"}}],
+    "project_state": [],
+    "state_deltas": [],
+    "required_facts": ["english", "concise", "bullets"]
+  },
+  {
+    "case_id": "project-001",
+    "category": "project_state",
+    "task": "List the next project action.",
+    "baseline_history": ["Project=ANA.", "Current phase=phase_3.", "Completed=phase_2.", "Next action=evidence_validation.", "User task: List the next project action."],
+    "ana_memory": [{"kind": "semantic", "content": {"project": "ANA"}}],
+    "project_state": [{"current_phase": "phase_3", "completed": "phase_2", "next_action": "evidence_validation"}],
+    "state_deltas": [],
+    "required_facts": ["ANA", "phase_3", "phase_2", "evidence_validation"]
+  },
+  {
+    "case_id": "project-002",
+    "category": "project_state",
+    "task": "Prepare the next test run.",
+    "baseline_history": ["Repository=ANA.", "Target RFC=RFC-0002.", "Test suite=conformance.", "Current status=ready_for_validation.", "User task: Prepare the next test run."],
+    "ana_memory": [{"kind": "semantic", "content": {"repository": "ANA"}}],
+    "project_state": [{"target_rfc": "RFC-0002", "test_suite": "conformance", "status": "ready_for_validation"}],
+    "state_deltas": [],
+    "required_facts": ["ANA", "RFC-0002", "conformance", "ready_for_validation"]
+  },
+  {
+    "case_id": "delta-001",
+    "category": "state_delta",
+    "task": "Report the current task status.",
+    "baseline_history": ["Task id=task-42.", "Previous message=msg-41.", "Sequence=7.", "State event kind=project_state.upsert.", "Status=routed.", "User task: Report the current task status."],
+    "ana_memory": [],
+    "project_state": [],
+    "state_deltas": [{"task_id": "task-42", "parent_event_id": "msg-41", "sequence": 7, "kind": "project_state.upsert", "status": "routed"}],
+    "required_facts": ["task-42", "msg-41", "7", "project_state.upsert", "routed"]
+  },
+  {
+    "case_id": "delta-002",
+    "category": "state_delta",
+    "task": "Explain why the task is blocked.",
+    "baseline_history": ["Task id=task-77.", "Previous event=evt-76.", "Sequence=12.", "State event kind=project_state.upsert.", "Status=blocked_missing_provider_key.", "User task: Explain why the task is blocked."],
+    "ana_memory": [],
+    "project_state": [],
+    "state_deltas": [{"task_id": "task-77", "parent_event_id": "evt-76", "sequence": 12, "kind": "project_state.upsert", "status": "blocked_missing_provider_key"}],
+    "required_facts": ["task-77", "evt-76", "12", "project_state.upsert", "blocked_missing_provider_key"]
+  }
+]
