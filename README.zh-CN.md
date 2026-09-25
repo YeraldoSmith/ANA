@@ -44,7 +44,7 @@ flowchart TD
 python3 -m conformance.run_phase7_suite
 ```
 
-您应看到四个通过的测试，覆盖两条路径：
+您应看到四个通过的测试：两个验证以下往返路径，另外两个验证规范化及状态向量、拒绝行为：
 
 ```text
 Python Reference Node → Java Independent Node → Python Reference Node

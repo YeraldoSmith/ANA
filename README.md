@@ -47,7 +47,8 @@ into a temporary directory). After cloning the repository, run:
 python3 -m conformance.run_phase7_suite
 ```
 
-You should see four passing tests covering both paths:
+You should see four passing tests: two check these round trips,
+and two check canonical/state vectors and rejection behavior:
 
 ```text
 Python Reference Node → Java Independent Node → Python Reference Node
